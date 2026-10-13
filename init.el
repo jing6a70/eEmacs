@@ -16,8 +16,10 @@
 ;; Set { core-dir } folder path
 (defvar core-dir (expand-file-name "core" user-emacs-directory))
 
-;; Load base editor setup (UI, indentation, built-in quality-of-life modes)
-(load (expand-file-name "use-common-emacs.el" core-dir) t t)
+;; Load base UI settings (frame, display, scrolling)
+(load (expand-file-name "base-ui.el" core-dir) t t)
+;; Load base editing settings (pairs, indentation, file history)
+(load (expand-file-name "base-edit.el" core-dir) t t)
 
 ;; Load custom-config (keeps `M-x customize' writes in a separate file)
 (load (expand-file-name "custom-config.el" core-dir) t t)
