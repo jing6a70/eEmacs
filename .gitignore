@@ -1,0 +1,17 @@
+.cache/
+.lsp-session-v1
+recentf
+recentf.eld
+session.*
+transient/
+url/
+*.elc
+auto-save-list/
+*.session
+eln-cache/
+elpa/
+.config-auto.el
+history
+projectile-bookmarks.eld
+projectile-frecency.eld
+forge-database.sqlite
