@@ -1,28 +1,49 @@
-;;; -*- lexical-binding: t; -*-
-;; init.el
+;;; init.el --- 启动入口 -*- lexical-binding: t; -*-
+;; /init.el
+;;
 ;; ┌─┐┌─┐┬─┐┌─┐┌─┐  ┌─┐┬ ┬┌─┐┬  ┌─┐┌─┐
 ;; ├─┘├┤ ├┬┘├┤ ├┤   ├─┤│ │├─┤│  ├┤ └─┐
 ;; ┴  └─┘┴└─└  └─┘  ┴ ┴└─┘┴ ┴┴─┘└─┘└─┘
-;;       A P E X     E M A C S   (minimal base)
-;;
-;; Commentary: Initial load file for Emacs. Loads on every Emacs start.
-;; Pure built-in setup: no third-party packages.
+;;         A P E X   E M A C S
 
-;; Set key variable { user-emacs-directory } => ~/.emacs.d/
+;;; Code:
+
+;; ---------- 目录 ----------
+;; 以本文件所在目录作为 user-emacs-directory
 (if (boundp 'load-file-name)
     (setq user-emacs-directory (file-name-as-directory (file-name-directory load-file-name)))
   (setq user-emacs-directory (file-name-as-directory "~/.emacs.d/")))
 
-;; Set { core-dir } folder path
+;; core 子目录
 (defvar core-dir (expand-file-name "core" user-emacs-directory))
 
-;; Load base UI settings (frame, display, scrolling)
+;; ---------- 加载 core ----------
+;; 界面与显示
 (load (expand-file-name "base-ui.el" core-dir) t t)
-;; Load base editing settings (pairs, indentation, file history)
+
+;; 编辑行为
 (load (expand-file-name "base-edit.el" core-dir) t t)
 
-;; Load custom-file management (keeps `M-x customize' writes in a separate file)
+;; C/C++ 代码风格(Linux)
+(load (expand-file-name "coding-style-linux.el" core-dir) t t)
+
+;; custom-file 管理
 (load (expand-file-name "custom-file.el" core-dir) t t)
 
-;; Built-in dark theme (Emacs 28+; alternatives: modus-operandi, wombat, deeper-blue)
+;; 个人快捷键(与 init.el 同级)
+(load (expand-file-name "keybindings.el" user-emacs-directory) t t)
+
+;; ---------- 主题 ----------
+;; 内置深色主题(Emacs 28+;可换 modus-operandi / wombat / deeper-blue)
 (load-theme 'modus-vivendi t)
+
+;; ---------- 启动收尾 ----------
+;; 启动 Emacs server,便于 emacsclient 连入(batch 模式自动跳过)
+(when (and (fboundp 'server-start) (not noninteractive))
+  (server-start))
+
+;; 恢复 early-init.el 中拉高的 GC 阈值
+(add-hook 'emacs-startup-hook
+          (lambda () (setq gc-cons-threshold (* 64 1024 1024))))
+
+;;; init.el ends here
