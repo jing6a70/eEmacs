@@ -3,17 +3,17 @@
 
 ;;; Code:
 
-;; 缩进使用空格填充
-(setq-default indent-tabs-mode nil)
-
-;; C/C++ 缩进 4 个空格
-(setq c-basic-offset 4)
-
 ;; C/C++ 使用 linux 风格
 (setq c-default-style "linux")
 
+;; 缩进使用空格填充
+(setq-default indent-tabs-mode nil)
+
 ;; Tab 宽度为 4 空格
 (setq-default tab-width 4)
+
+;; C/C++ 缩进 4 个空格
+(setq c-basic-offset 4)
 
 (provide 'coding-style-linux)
 ;;; coding-style-linux.el ends here
