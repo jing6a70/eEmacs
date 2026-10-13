@@ -21,8 +21,8 @@
 ;; Load base editing settings (pairs, indentation, file history)
 (load (expand-file-name "base-edit.el" core-dir) t t)
 
-;; Load custom-config (keeps `M-x customize' writes in a separate file)
-(load (expand-file-name "custom-config.el" core-dir) t t)
+;; Load custom-file management (keeps `M-x customize' writes in a separate file)
+(load (expand-file-name "custom-file.el" core-dir) t t)
 
 ;; Built-in dark theme (Emacs 28+; alternatives: modus-operandi, wombat, deeper-blue)
 (load-theme 'modus-vivendi t)
