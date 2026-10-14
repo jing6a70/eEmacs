@@ -24,5 +24,6 @@ elpa/
 eln-cache/
 
 forge-database.sqlite*
+transient/
 
 .cache/

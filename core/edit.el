@@ -47,8 +47,10 @@
   (repeat-mode 1)
   ;; docstring 单行超过 120 列才告警(默认 80)
   (setq byte-compile-docstring-max-column 120)
-  ;; 关闭 not-unused 告警(第三方包用 _ 变量时的误报, 如 llama.el)
-  (setq byte-compile-warnings '(not not-unused)))
+  ;; 关闭第三方包常见的编译误报:
+  ;;   not-unused -> 用 _ 变量时的告警(如 llama.el)
+  ;;   lexical    -> 宏展开后的"未使用词法变量"(如 diff-hl-flydiff.el)
+  (setq byte-compile-warnings '(not not-unused lexical)))
 
 ;; C/C++使用linux风格 | 缩进使用空格填充
 (setq c-default-style "linux")
