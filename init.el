@@ -25,6 +25,10 @@
 ;; 加载按键绑定配置
 (load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
 
+(if (< emacs-major-version 29)
+    (load-theme 'tsdh-dark t)
+  (load-theme 'modus-operandi-tinted t))
+
 ;; 启动emacs server => 如果发现systemd已启动则跳过
 (require 'server)
 (unless (or noninteractive
