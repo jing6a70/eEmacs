@@ -13,10 +13,8 @@
 ;; 关闭滚动条
 (scroll-bar-mode -1)
 
-;; 不使用第三方包,跳过启动时的包激活
-(setq package-enable-at-startup nil)
-
 ;; 关闭工具栏
 (tool-bar-mode -1)
 
+(provide 'early-init)
 ;;; early-init.el ends here
