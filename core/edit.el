@@ -41,9 +41,12 @@
 ;; 保存上次编辑时的光标位置
 (save-place-mode 1)
 
-;; 重复命令免前缀键
+;; Emacs 28.1+ 专属设置
 (when (version<= "28.1" emacs-version)
-  (repeat-mode 1))
+  ;; 重复命令免前缀键
+  (repeat-mode 1)
+  ;; docstring 单行超过 120 列才告警(默认 80)
+  (setq byte-compile-docstring-max-column 120))
 
 ;; C/C++使用linux风格 | 缩进使用空格填充
 (setq c-default-style "linux")

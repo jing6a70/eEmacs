@@ -25,6 +25,16 @@
         (load (expand-file-name module core-dir) nil t))
       '("view" "edit" "theme"))
 
+;; 注册modules子目录
+(add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
+
+;; 模块加载列表
+(defvar my/local-modules
+  '(use-magit)) 
+
+(dolist (module my/local-modules)
+  (require module nil 'noerror))
+
 
 ;; 加载按键绑定配置
 (load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
