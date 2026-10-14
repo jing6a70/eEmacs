@@ -3,7 +3,7 @@
 
 ;;; Code:
 
-;; 禁止生成 file~ 备份(#file# 自动保存默认仍开启)
+;; 禁止生成 file~ 备份
 (setq make-backup-files nil)
 
 ;; 两个 dired 窗口之间可直接复制/移动
@@ -41,17 +41,7 @@
 ;; 保存上次编辑时的光标位置
 (save-place-mode 1)
 
-;; ---------- Emacs 28.1+ ----------
-
-;; 放宽编译时 docstring 最大列宽
-(when (version<= "28.1" emacs-version)
-  (setq byte-compile-docstring-max-column 120))
-
-;; 提示使用 y/n 代替 yes/no(Emacs 28+)
-(when (version<= "28.1" emacs-version)
-  (setq use-short-answers t))
-
-;; 重复命令免前缀键(Emacs 28+)
+;; 重复命令免前缀键
 (when (version<= "28.1" emacs-version)
   (repeat-mode 1))
 
