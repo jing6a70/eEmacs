@@ -28,7 +28,7 @@
             (server-running-p))
   (server-start))
 
-;; 设置CG阀值=16M
+;; 设置GC阀值=16M
 (add-hook 'emacs-startup-hook
           (lambda () (setq gc-cons-threshold (* 16 1024 1024))))
 
