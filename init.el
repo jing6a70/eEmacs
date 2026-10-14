@@ -7,43 +7,32 @@
 ;;         A P E X   E M A C S
 
 ;;; Code:
+;;; init.el --- 启动入口 -*- lexical-binding: t; -*-
+;;; Code:
 
+;; 设置user-emacs-directory
+(setq user-emacs-directory
+      (file-name-as-directory
+       (file-truename (file-name-directory (or load-file-name buffer-file-name)))))
 
-;; 以本文件所在目录作为 user-emacs-directory
-(if (boundp 'load-file-name)
-    (setq user-emacs-directory (file-name-as-directory (file-name-directory load-file-name)))
-  (setq user-emacs-directory (file-name-as-directory "~/.emacs.d/")))
+;; 注册core子目录
+(defconst core-dir (expand-file-name "core" user-emacs-directory))
+;; 加载core子目录配置
+(load (expand-file-name "custom-file.el" core-dir) nil t)
+(load (expand-file-name "base-ui.el"   core-dir) nil t)
+(load (expand-file-name "base-edit.el" core-dir) nil t)
+(load (expand-file-name "coding-style-linux.el" core-dir) nil t)
 
-;; core 子目录
-(defvar core-dir (expand-file-name "core" user-emacs-directory))
-
-;; 界面与显示
-(load (expand-file-name "base-ui.el" core-dir) t t)
-
-;; 编辑行为
-(load (expand-file-name "base-edit.el" core-dir) t t)
-
-;; C/C++ 代码风格(Linux)
-(load (expand-file-name "coding-style-linux.el" core-dir) t t)
-
-;; custom-file 管理
-(load (expand-file-name "custom-file.el" core-dir) t t)
-
-;; 个人快捷键(与 init.el 同级)
-(load (expand-file-name "keybindings.el" user-emacs-directory) t t)
-
-;; 启动 Emacs server,便于 emacsclient 连入(batch 模式自动跳过)
-(when (and (fboundp 'server-start) (not noninteractive))
+;; 启动emacs server => 如果发现已启动则跳过
+(unless (or noninteractive (daemonp))
   (server-start))
 
-;; 恢复 early-init.el 中拉高的 GC 阈值
+;; 设置CG阀值=16M
 (add-hook 'emacs-startup-hook
-          (lambda () (setq gc-cons-threshold (* 64 1024 1024))))
+          (lambda () (setq gc-cons-threshold (* 16 1024 1024))))
 
-;; ---------- Emacs 28.1+ ----------
+;; 加载按键绑定配置
+(load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
 
-;; 内置深色主题(Emacs 28+;可换 modus-operandi / wombat / deeper-blue)
-(when (version<= "28.1" emacs-version)
-  (load-theme 'modus-vivendi t))
-
+(provide 'init)
 ;;; init.el ends here
