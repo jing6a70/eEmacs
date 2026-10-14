@@ -1,4 +1,3 @@
-# ---- Emacs 数据 / 状态文件 ----
 .config-auto.el
 places
 history
@@ -7,9 +6,21 @@ recentf.eld
 auto-save-list/
 *.elc
 
-# ---- 包与原生编译缓存(预留,便于将来装包时不污染仓库)----
+*~
+\#*\#
+.\#*
+/.emacs.desktop
+/.emacs.desktop.lock
+
+/eshell/history
+/eshell/lastdir
+
+tramp
+
+flycheck_*.el
+*_flymake.*
+
 elpa/
 eln-cache/
 
-# ---- 其他缓存 ----
 .cache/
