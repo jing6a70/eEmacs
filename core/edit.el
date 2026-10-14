@@ -46,7 +46,9 @@
   ;; 重复命令免前缀键
   (repeat-mode 1)
   ;; docstring 单行超过 120 列才告警(默认 80)
-  (setq byte-compile-docstring-max-column 120))
+  (setq byte-compile-docstring-max-column 120)
+  ;; 关闭 not-unused 告警(第三方包用 _ 变量时的误报, 如 llama.el)
+  (setq byte-compile-warnings '(not not-unused)))
 
 ;; C/C++使用linux风格 | 缩进使用空格填充
 (setq c-default-style "linux")

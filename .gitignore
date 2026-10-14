@@ -23,4 +23,6 @@ flycheck_*.el
 elpa/
 eln-cache/
 
+forge-database.sqlite*
+
 .cache/
