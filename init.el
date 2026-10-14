@@ -21,6 +21,10 @@
 (load (expand-file-name "base-edit.el" core-dir) nil t)
 (load (expand-file-name "coding-style-linux.el" core-dir) nil t)
 
+
+;; 加载按键绑定配置
+(load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
+
 ;; 启动emacs server => 如果发现systemd已启动则跳过
 (require 'server)
 (unless (or noninteractive
@@ -31,9 +35,6 @@
 ;; 设置GC阀值=16M
 (add-hook 'emacs-startup-hook
           (lambda () (setq gc-cons-threshold (* 16 1024 1024))))
-
-;; 加载按键绑定配置
-(load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
 
 (provide 'init)
 ;;; init.el ends here
