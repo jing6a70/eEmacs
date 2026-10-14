@@ -7,8 +7,6 @@
 ;;         A P E X   E M A C S
 
 ;;; Code:
-;;; init.el --- 启动入口 -*- lexical-binding: t; -*-
-;;; Code:
 
 ;; 设置user-emacs-directory
 (setq user-emacs-directory
@@ -24,7 +22,10 @@
 (load (expand-file-name "coding-style-linux.el" core-dir) nil t)
 
 ;; 启动emacs server => 如果发现已启动则跳过
-(unless (or noninteractive (daemonp))
+(require 'server)
+(unless (or noninteractive
+            (daemonp)
+            (server-running-p))
   (server-start))
 
 ;; 设置CG阀值=16M
