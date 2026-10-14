@@ -23,7 +23,7 @@
 ;; 加载core子目录配置
 (mapc (lambda (module)
         (load (expand-file-name module core-dir) nil t))
-      '("view" "edit" "theme"))
+      '("elpa" "view" "edit" "theme"))
 
 ;; 注册modules子目录
 (add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))

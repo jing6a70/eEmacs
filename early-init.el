@@ -4,10 +4,6 @@
 ;;; Code:
 
 
-;; 配置包仓库 => 在 package.el 初始化前生效
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
 ;; 启动阶段拉高 GC 阈值 => init.el启动完成后恢复
 (setq gc-cons-threshold most-positive-fixnum)
 
