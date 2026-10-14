@@ -21,7 +21,7 @@
 (load (expand-file-name "base-edit.el" core-dir) nil t)
 (load (expand-file-name "coding-style-linux.el" core-dir) nil t)
 
-;; 启动emacs server => 如果发现已启动则跳过
+;; 启动emacs server => 如果发现systemd已启动则跳过
 (require 'server)
 (unless (or noninteractive
             (daemonp)
