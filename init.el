@@ -27,7 +27,9 @@
 
 (if (< emacs-major-version 29)
     (load-theme 'tsdh-dark t)
-  (load-theme 'modus-operandi-tinted t))
+  (unless (ignore-errors (load-theme 'modus-operandi-tinted t))
+    (message "ApexInfo: modus-operandi-tinted theme not found. Falling back to modus-operandi.")
+    (load-theme 'modus-operandi t)))
 
 ;; 启动emacs server => 如果发现systemd已启动则跳过
 (require 'server)
