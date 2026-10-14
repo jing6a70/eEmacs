@@ -1,5 +1,5 @@
-;;; base-ui.el --- 界面与显示 -*- lexical-binding: t; -*-
-;; /core/base-ui.el
+;;; view.el --- 界面与显示 -*- lexical-binding: t; -*-
+;; /core/view.el
 
 ;;; Code:
 
@@ -54,5 +54,5 @@
 (when (version<= "29.1" emacs-version)
   (pixel-scroll-precision-mode 1))
   
-(provide 'base-ui)
-;;; base-ui.el ends here
+(provide 'view)
+;;; view.el ends here

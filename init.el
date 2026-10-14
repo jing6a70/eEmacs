@@ -13,23 +13,21 @@
       (file-name-as-directory
        (file-truename (file-name-directory (or load-file-name buffer-file-name)))))
 
+;; 将 M-x customize 的写入定向到独立文件 
+(setq custom-file (expand-file-name ".config-auto.el" user-emacs-directory))
+(load custom-file 'noerror) ;; 存在则加载, 不存在静默忽略
+
 ;; 注册core子目录
 (defconst core-dir (expand-file-name "core" user-emacs-directory))
+
 ;; 加载core子目录配置
-(load (expand-file-name "custom-file.el" core-dir) nil t)
-(load (expand-file-name "base-ui.el"   core-dir) nil t)
-(load (expand-file-name "base-edit.el" core-dir) nil t)
-(load (expand-file-name "coding-style-linux.el" core-dir) nil t)
+(mapc (lambda (module)
+        (load (expand-file-name module core-dir) nil t))
+      '("view" "edit" "theme"))
 
 
 ;; 加载按键绑定配置
 (load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
-
-(if (< emacs-major-version 29)
-    (load-theme 'tsdh-dark t)
-  (unless (ignore-errors (load-theme 'modus-operandi-tinted t))
-    (message "ApexInfo: modus-operandi-tinted theme not found. Falling back to modus-operandi.")
-    (load-theme 'modus-operandi t)))
 
 ;; 启动emacs server => 如果发现systemd已启动则跳过
 (require 'server)

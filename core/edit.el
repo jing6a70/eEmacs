@@ -1,5 +1,5 @@
-;;; base-edit.el --- 编辑行为 -*- lexical-binding: t; -*-
-;; /core/base-edit.el
+;;; edit.el --- 编辑行为 -*- lexical-binding: t; -*-
+;; /core/edit.el
 
 ;;; Code:
 
@@ -45,5 +45,13 @@
 (when (version<= "28.1" emacs-version)
   (repeat-mode 1))
 
-(provide 'base-edit)
-;;; base-edit.el ends here
+;; C/C++使用linux风格 | 缩进使用空格填充
+(setq c-default-style "linux")
+(setq-default indent-tabs-mode nil)
+
+;; Tab 宽度为 4 空格 | C/C++ 缩进 4 个空格
+(setq-default tab-width 4)
+(setq c-basic-offset 4)
+
+(provide 'edit)
+;;; edit.el ends here
