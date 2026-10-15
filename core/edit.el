@@ -41,16 +41,9 @@
 ;; 保存上次编辑时的光标位置
 (save-place-mode 1)
 
-;; Emacs 28.1+ 专属设置
+;; 重复命令免前缀键
 (when (version<= "28.1" emacs-version)
-  ;; 重复命令免前缀键
-  (repeat-mode 1)
-  ;; docstring 单行超过 120 列才告警(默认 80)
-  (setq byte-compile-docstring-max-column 120)
-  ;; 关闭第三方包常见的编译误报:
-  ;;   not-unused -> 用 _ 变量时的告警(如 llama.el)
-  ;;   lexical    -> 宏展开后的"未使用词法变量"(如 diff-hl-flydiff.el)
-  (setq byte-compile-warnings '(not not-unused lexical)))
+  (repeat-mode 1))
 
 ;; C/C++使用linux风格 | 缩进使用空格填充
 (setq c-default-style "linux")
