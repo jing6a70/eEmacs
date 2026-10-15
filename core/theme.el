@@ -9,7 +9,7 @@
     (load-theme 'tsdh-dark t)
   (unless (ignore-errors (load-theme 'modus-operandi-tinted t))
     (message "ApexInfo: modus-operandi-tinted theme not found. Falling back to modus-operandi.")
-    (load-theme 'modus-operandi t)))
+    (load-theme 'tsdh-dark t)))
 
 (provide 'theme)
 ;;; theme.el ends here
