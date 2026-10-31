@@ -45,6 +45,8 @@
     (define-key map (kbd "g") #'gdb)
     (define-key map (kbd "m") #'gdb-many-windows)
     (define-key map (kbd "R") #'gdb-restore-windows)
+    ;; 在别的文件里翻代码后, 一键把源码窗口拉回当前执行点
+    (define-key map (kbd "j") #'gud-refresh)
     map)
   "调试前缀键 C-c d 对应的 keymap.")
 
