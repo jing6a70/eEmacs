@@ -32,8 +32,9 @@ gdb :program "./demo"
 
 ## 说明
 
-- 配置里设置了 `defer-launch-attach t`：GDB 的 DAP 收到 launch 会立刻启动程序，
-  断点随后下发会被以 `notStopped` 拒绝（GDB bug 32090），推迟 launch 才生效；
+- 启动后如果断点不生效（程序直接跑完），是 GDB DAP 的 bug 32090：先 `C-c g p`
+  暂停，再 `C-c g b` 下断点并 `C-c g c` 继续；想一劳永逸可以在 `:config` 里加回
+  `defer-launch-attach t`；
 - dape 走 DAP，不依赖也不共用内置 gdb-mi；需要 MI 专属能力（core dump 等）
   时手动 `M-x gdb`，本配置不提供 `C-c d` 前缀；
 - `*dape-repl*` 里可以直接输入 dape 命令（`continue`、`next`、`stack`、
