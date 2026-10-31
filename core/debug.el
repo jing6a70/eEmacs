@@ -132,6 +132,17 @@
   (interactive (list (read-file-name "Program: " nil nil t)))
   (gdb (format "%s -i=mi %s" my/gdb-multiarch-program program)))
 
+(defun my/gdb-interrupt ()
+  "中断正在运行的程序, 等价于 *gud* 缓冲区里的 C-c C-c."
+  (interactive)
+  (unless (and (bound-and-true-p gud-comint-buffer)
+               (get-buffer-process gud-comint-buffer))
+    (user-error "还没有 GDB 会话: 先 C-c d g / C-c d M"))
+  (unless (bound-and-true-p gud-running)
+    (user-error "程序没有在运行 (可能已经停在断点处)"))
+  (gud-stop-subjob)
+  (message "已发送中断 (SIGINT)"))
+
 (defun my/gdb-remote-connect (host port)
   "在当前 GUD 会话里连接 gdbserver HOST:PORT.
 会顺带设置 `my/gdb-source-path-mapping' 和 `my/gdb-solib-search-path'."
@@ -167,6 +178,8 @@
     (define-key map (kbd "e") #'my/gdb-remote-connect)
     ;; 在别的文件里翻代码后, 一键把源码窗口拉回当前执行点
     (define-key map (kbd "j") #'gud-refresh)
+    ;; 中断正在跑的程序 (等价 *gud* 里 C-c C-c)
+    (define-key map (kbd "P") #'my/gdb-interrupt)
     ;; 按需弹出被精简掉的缓冲区
     (define-key map (kbd "G") #'my/gdb-show-gud)
     (define-key map (kbd "L") #'gdb-display-locals-buffer)
