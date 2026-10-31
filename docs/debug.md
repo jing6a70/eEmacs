@@ -136,6 +136,9 @@ gdb --interpreter=dap
 - 首次启动会在 minibuffer 预填 `gdb :program "/path/to/demo"`，直接回车；
 - 界面是右侧变量/栈/断点/线程面板、左边源码，比 gdb-mi 的 6 窗格干净；
 - dape 的断点在源码缓冲区里有 overlay，与 gdb-mi 的断点互不影响（两套各存各的）；
+- 已默认设置 `defer-launch-attach t`：GDB 的 DAP 收到 launch 就开始跑程序，
+  之后再下发断点会被以 `notStopped` 拒绝，断点等于失效（GDB bug 32090）。
+  加了这一项后断点才会在启动时生效；
 - 需要先 `M-x compile` 编译出带 `-g` 的可执行文件；
 - 想从头再跑一遍：`C-c g r`（`dape-restart`，复用上次配置；会话已退出也有效），
   或在 `*dape-repl*` 里敲 `restart`；

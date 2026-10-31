@@ -63,6 +63,14 @@ minibuffer 里会预填 `gdb :program ...', 回车确认即可开始."
   ;; 想复刻 gdb-mi 的布局可改成 'gud, 或用 C-c g l 切换.
   (setq dape-buffer-window-arrangement 'right)
 
+  ;; GDB 的 DAP 在收到 launch 请求时就会把程序跑起来, 之后 dape 再下发
+  ;; setBreakpoints 会被 GDB 以 "notStopped" 拒绝, 表现就是"断点形同虚设,
+  ;; 程序一路跑完". 让 dape 把 launch 推迟到 configurationDone 之后,
+  ;; 断点才能真正生效 (dape 文档里的 defer-launch-attach, 对应 GDB bug 32090).
+  (when-let* ((gdb-config (assq 'gdb dape-configs)))
+    (setcdr gdb-config
+            (plist-put (cdr gdb-config) 'defer-launch-attach t)))
+
   ;; 源码缓冲区里直接显示断点
   (dape-breakpoint-global-mode 1)
 
