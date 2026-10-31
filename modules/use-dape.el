@@ -5,6 +5,7 @@
   :config
   (when-let* ((cfg (assq 'gdb dape-configs)))
     (setcdr cfg (plist-put (cdr cfg) 'defer-launch-attach t)))
+  (setq dape-buffer-window-arrangement 'right)
   (defvar my/dape-map
     (with-no-warnings
       (let ((map (make-sparse-keymap)))
