@@ -24,6 +24,9 @@
 |---|---|
 | `C-c d s` | 启动调试 |
 | `C-c d c` | 继续 |
+| `C-c d n` | 单步跳过（next） |
+| `C-c d i` | 步入（step in） |
+| `C-c d o` | 步出（step out） |
 | `C-c d u` | 运行到当前行 |
 | `C-c d b` | 断点开关 |
 | `C-c d l` | log 断点 |
