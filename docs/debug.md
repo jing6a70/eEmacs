@@ -190,6 +190,14 @@ dape 走 DAP，连 `target remote` 这条路走不通，所以远程调试用 gd
   `set solib-search-path /opt/qt-5.9.5-arm/lib`（对应 `my/gdb-solib-search-path`）。
   只调试自己代码的话不需要；
 - `gdbserver` 必须和目标 ABI 匹配（armhf/hard-float），设备上没有就从 SDK 拷；
+- **一定用设备上那份二进制做符号**：本地构建产物和设备镜像里的可能不是同一次构建
+  （md5 不同），用错文件行号/栈会整体偏移。直接从设备拉一份：
+
+  ```sh
+  scp xrd@172.16.1.101:/opt/QtMc/GreenPulse <build>/Src/GreenPulse-device
+  ```
+
+  然后在 `C-c d M` 里选这个 `GreenPulse-device` 去调；
 - 断点/单步走的是远程协议，会比本地慢一点，属正常。
 
 ## 备选方案（第三方）
