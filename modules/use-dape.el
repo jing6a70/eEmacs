@@ -3,6 +3,8 @@
 (use-package dape
   :ensure t
   :config
+  (when-let* ((cfg (assq 'gdb dape-configs)))
+    (setcdr cfg (plist-put (cdr cfg) 'defer-launch-attach t)))
   (defvar my/dape-map
     (with-no-warnings
       (let ((map (make-sparse-keymap)))

@@ -40,5 +40,5 @@ dape 自己的 `C-x C-a` 默认前缀仍然可用（`dape-key-prefix`）。
 
 - 默认信息面板在左侧（`dape-buffer-window-arrangement` 默认 `'left`）；
 - 点 fringe 断点圆圈要 `M-x dape-breakpoint-global-mode`；
-- 启动时下的断点可能不生效（GDB bug 32090，程序直接跑完）：先 `M-x dape-pause`
-  暂停再下断点。
+- 配置里设置了 `defer-launch-attach t`：GDB 的 DAP 收到 launch 会先跑程序，
+  断点随后下发会被以 `notStopped` 拒绝（GDB bug 32090）。删掉它断点就会失效。
