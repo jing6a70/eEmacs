@@ -107,11 +107,42 @@ layout 文件只记录窗口结构和缓冲区类型（源码/命令/locals/stac
 
 示例工程：`~/Desktop/c-debug-demo`（main.c / score.c / stats.c，跨文件调用栈）。
 
+## dape（DAP 前端，`C-c g`）
+
+`core/debug-dape.el` 额外接入了 [dape](https://elpa.gnu.org/packages/dape.html)，走 GDB 14.1+ 自带的 DAP 接口：
+
+```text
+gdb --interpreter=dap
+```
+
+与 gdb-mi 并存，两套前缀各管各的：`C-c d` 是 MI，`C-c g` 是 DAP。
+
+| 按键 | 作用 |
+|---|---|
+| `C-c g g` | 启动调试（自动从 Makefile 的 `TARGET` 猜可执行文件，回车确认） |
+| `C-c g b` / `B` | 当前行 断点 开关 / 删除 |
+| `C-c g c` / `n` / `s` / `o` / `u` | 继续 / 单步跳过 / 步入 / 步出 / 运行到当前行 |
+| `C-c g p` | 暂停 |
+| `C-c g e` / `w` | 求值表达式 / 监视光标处表达式 |
+| `C-c g i` / `R` / `d` | 信息面板 / REPL / 反汇编 |
+| `C-c g l` | 布局在 `'right`（右侧面板）和 `'gud`（gdb-mi 风格）之间切换 |
+| `C-c g m` | dape 多窗口布局开关 |
+| `C-c g q` / `k` | 结束会话 / 杀掉会话 |
+| `C-c g ?` | dape 菜单 |
+
+要点：
+
+- 首次启动会在 minibuffer 预填 `gdb :program "/path/to/demo"`，直接回车；
+- 界面是右侧变量/栈/断点/线程面板、左边源码，比 gdb-mi 的 6 窗格干净；
+- dape 的断点在源码缓冲区里有 overlay，与 gdb-mi 的断点互不影响（两套各存各的）；
+- 需要先 `M-x compile` 编译出带 `-g` 的可执行文件；
+- 不支持 gdb-mi 的 MI 专属玩法（attach PID、core dump 等），那些继续用 `C-c d`。
+
 ## 备选方案（第三方）
 
 | 方案 | 适合 | 代价 |
 |---|---|---|
-| `realgud`（MELPA） | 想要轻量、单窗口 + 少量 popup，支持 gdb/pdb/bashdb 等多语言 | 功能比 gdb-mi 少，没有 MI 变量树 |
+| `realgud`（GNU ELPA） | 想要轻量、单窗口 + 少量 popup，支持 gdb/pdb/bashdb 等多语言 | 功能比 gdb-mi 少，没有 MI 变量树 |
 | `dap-mode` + `dap-gdb-lldb` | 已有 lsp-mode 生态，想统一 UI | 依赖重，需要 lsp 和额外配置 |
 | `gdb -tui` 跑在 `M-x term` 里 | 只想要真·TUI，界面最紧凑 | 源窗口不能编辑，键位受终端限制 |
 
