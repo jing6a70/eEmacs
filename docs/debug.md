@@ -121,6 +121,7 @@ gdb --interpreter=dap
 | 按键 | 作用 |
 |---|---|
 | `C-c g g` | 启动调试（自动从 Makefile 的 `TARGET` 猜可执行文件，回车确认） |
+| `C-c g t` | 远程 attach 到 gdbserver（gdb-multiarch + DAP，见下文） |
 | `C-c g b` / `B` | 当前行 断点 开关 / 删除 |
 | `C-c g c` / `n` / `s` / `o` / `u` | 继续 / 单步跳过 / 步入 / 步出 / 运行到当前行 |
 | `C-c g p` | 暂停 |
@@ -148,7 +149,12 @@ gdb --interpreter=dap
 ## 远程 / ARM 交叉调试（gdbserver，`C-c d`）
 
 适合"二进制跑在嵌入式 ARM 设备上，源码和 gdb 在 PC 上"的场景。
-dape 走 DAP，连 `target remote` 这条路走不通，所以远程调试用 gdb-mi。
+两条路都能用：
+
+- **dape 原生 attach（推荐，`C-c g t`）**：GDB 15 的 DAP `attach` 请求支持 `:target`
+  参数，内部就是 `target remote HOST:PORT`，不需要额外脚本；
+- **gdb-mi（`C-c d M` + `C-c d e`）**：MI 协议，适合需要 attach PID、core dump
+  这类 MI 专属能力的时候。
 
 ### 准备
 
@@ -169,18 +175,27 @@ dape 走 DAP，连 `target remote` 这条路走不通，所以远程调试用 gd
 
 - PC 能连到 `172.16.1.101:1234`：`nc -z 172.16.1.101 1234`。
 
-### Emacs 里
+### 方式一：dape（推荐）
 
-1. `C-c d M` → 选本地那份带 `-g` 的二进制
-   （例如 `~/Desktop/sgc/build-GreenPulse-xrdARM-Debug/Src/GreenPulse-V6.7.1_3`）；
-2. `C-c d e` → 回车（默认 `172.16.1.101:1234`），会自动执行：
+1. `C-c g t` → 选本地那份和设备一致的二进制
+   （例如 `~/Desktop/sgc/build-GreenPulse-xrdARM-Debug/Src/GreenPulse-device`）；
+2. 回车确认 host/port（默认 `172.16.1.101:1234`）；
+3. dape 用 `gdb-multiarch --interpreter=dap` 启动，并发 `attach`（`:target`），
+   等价于 `target remote`；`my/gdb-source-path-mapping` 和 `my/gdb-solib-search-path`
+   会被翻译成 `-ex "set substitute-path ..."` 一起带进去；
+4. 之后 `C-c g b` 断点、`C-c g c` 继续、`C-c g n` 单步。
+
+### 方式二：gdb-mi（MI）
+
+1. `C-c d M` → 选同一个二进制；
+2. `C-c d e` → 回车（默认 `172.16.1.101:1234`），自动执行：
 
    ```text
    target remote 172.16.1.101:1234
    set substitute-path /home/jingpeng/Desktop/virtDisk /home/jingpeng/Desktop/sgc
    ```
 
-3. 之后照常 `C-c d b` 打断点、`C-c d c` 继续、`C-c d n` 单步。
+3. 之后 `C-c d b` / `C-c d c` / `C-c d n`。
 
 ### 四个坑
 

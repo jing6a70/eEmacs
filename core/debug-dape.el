@@ -13,6 +13,12 @@
 
 (require 'dape nil t)
 
+;; 这两个变量定义在 core/debug.el (gdb-mi 的远程调试也用), 这里只声明以免编译告警
+(defvar my/gdb-remote-host)
+(defvar my/gdb-remote-port)
+(defvar my/gdb-source-path-mapping)
+(defvar my/gdb-solib-search-path)
+
 ;;; 从工程里猜可执行文件
 (defun my/dape--guess-program ()
   "在当前目录的 Makefile 里找 TARGET, 返回可执行文件的绝对路径."
@@ -57,6 +63,49 @@ minibuffer 里会预填 `gdb :program ...', 回车确认即可开始."
         (if (eq dape-buffer-window-arrangement 'right) 'gud 'right))
   (message "dape 布局: %s (下次启动生效)" dape-buffer-window-arrangement))
 
+
+;;; 远程 / 交叉调试: dape 原生 attach 到 gdbserver
+;; GDB 15 的 DAP attach 支持 :target 参数, 内部执行 `target remote HOST:PORT';
+;; 所以不需要 gdb-mi 也能调远程, 只要本地有带符号的二进制.
+(defun my/dape--remote-config (program host port)
+  "构造 attach 到 HOST:PORT 上 gdbserver 的 dape 配置.
+PROGRAM 是本地带调试符号的二进制 (应与目标上运行的完全一致)."
+  (let ((ex-args
+         (append
+          (list "-ex" "set pagination off")
+          (when my/gdb-source-path-mapping
+            (mapcan (lambda (m)
+                      (list "-ex"
+                            (format "set substitute-path %s %s" (car m) (cdr m))))
+                    my/gdb-source-path-mapping))
+          (when my/gdb-solib-search-path
+            (list "-ex" (format "set solib-search-path %s"
+                                my/gdb-solib-search-path))))))
+    `(gdb-remote
+      modes (c-mode c-ts-mode c++-mode c++-ts-mode)
+      command "gdb-multiarch"
+      command-args ("--interpreter=dap" ,@ex-args)
+      :request "attach"
+      :program ,program
+      :target ,(format "%s:%s" host port))))
+
+(defun my/dape-remote (&optional program host port)
+  "用 dape + gdb-multiarch attach 到远程 gdbserver 调试.
+PROGRAM 用本地那份与目标一致的二进制; HOST:PORT 是 gdbserver 地址."
+  (interactive
+   (list (read-file-name "Local program with symbols: " nil nil t)
+         (read-string "Target host: " my/gdb-remote-host)
+         (read-string "Port: " my/gdb-remote-port)))
+  (unless (featurep 'dape)
+    (user-error "dape 未安装: M-x package-install RET dape"))
+  (unless (and program (file-executable-p program))
+    (user-error "%s 不存在或不可执行" program))
+  (let* ((entry (my/dape--remote-config program host port))
+         (key (car entry))
+         (config (cdr entry)))
+    (setf (alist-get key dape-configs) config)
+    (dape (dape--config-eval key (copy-tree config)))))
+
 (when (featurep 'dape)
 
   ;; 右侧信息面板: 变量 / 栈 / 断点 / 线程, 比 gdb-mi 的 6 窗格清爽.
@@ -78,6 +127,8 @@ minibuffer 里会预填 `gdb :program ...', 回车确认即可开始."
     (let ((map (make-sparse-keymap)))
       ;; 启动
       (define-key map (kbd "g") #'my/dape-start)
+      ;; 远程: attach 到目标上的 gdbserver
+      (define-key map (kbd "t") #'my/dape-remote)
       ;; 断点
       (define-key map (kbd "b") #'dape-breakpoint-toggle)
       (define-key map (kbd "B") #'dape-breakpoint-remove-at-point)
