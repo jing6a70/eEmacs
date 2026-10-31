@@ -95,6 +95,66 @@
       (pop-to-buffer gud-comint-buffer)
     (user-error "还没有 GDB 会话: 先按 C-c d g 启动调试")))
 
+;;; 远程 / 交叉调试 (gdbserver + gdb-multiarch)
+(defcustom my/gdb-multiarch-program "gdb-multiarch"
+  "gdb-multiarch 可执行文件.
+调试 ARM 目标必须用它, 本机 /usr/bin/gdb 只支持 x86_64."
+  :type 'string
+  :group 'gdb)
+
+(defcustom my/gdb-remote-host "172.16.1.101"
+  "gdbserver 所在主机的默认地址."
+  :type 'string
+  :group 'gdb)
+
+(defcustom my/gdb-remote-port "1234"
+  "gdbserver 的默认端口."
+  :type 'string
+  :group 'gdb)
+
+(defcustom my/gdb-source-path-mapping
+  '(("/home/jingpeng/Desktop/virtDisk" . "/home/jingpeng/Desktop/sgc"))
+  "调试信息里的源码路径 -> 本机真实源码路径 的映射.
+交叉编译在别的机器/目录里做时, DWARF 里记的是构建机的路径,
+用 `set substitute-path' 映射到本机源码. 设为 nil 则不映射."
+  :type '(alist :key-type string :value-type string)
+  :group 'gdb)
+
+(defcustom my/gdb-solib-search-path nil
+  "非 nil 时连接远程目标后执行 `set solib-search-path'.
+例如交叉编译用的 Qt 库目录 /opt/qt-5.9.5-arm/lib."
+  :type '(choice (const :tag "不设置" nil) string)
+  :group 'gdb)
+
+(defun my/gdb-multiarch-start (program)
+  "用 `my/gdb-multiarch-program' 启动 MI 会话调试 PROGRAM.
+用于 ARM 等交叉目标, 之后用 C-c d e 连接 gdbserver."
+  (interactive (list (read-file-name "Program: " nil nil t)))
+  (gdb (format "%s -i=mi %s" my/gdb-multiarch-program program)))
+
+(defun my/gdb-remote-connect (host port)
+  "在当前 GUD 会话里连接 gdbserver HOST:PORT.
+会顺带设置 `my/gdb-source-path-mapping' 和 `my/gdb-solib-search-path'."
+  (interactive (list (read-string "Target host: " my/gdb-remote-host)
+                     (read-string "Port: " my/gdb-remote-port)))
+  (unless (and (bound-and-true-p gud-comint-buffer)
+               (get-buffer-process gud-comint-buffer))
+    (user-error "还没有 GUD 会话: 先 C-c d M 启动 gdb-multiarch"))
+  (dolist (cmd (append
+                (list (format "target remote %s:%s" host port))
+                (when my/gdb-source-path-mapping
+                  (mapcar (lambda (m)
+                            (format "set substitute-path %s %s" (car m) (cdr m)))
+                          my/gdb-source-path-mapping))
+                (when my/gdb-solib-search-path
+                  (list (format "set solib-search-path %s"
+                                my/gdb-solib-search-path)))))
+    (with-current-buffer gud-comint-buffer
+      (goto-char (point-max))
+      (insert cmd)
+      (comint-send-input)))
+  (message "已连接 gdbserver %s:%s" host port))
+
 ;;; 快捷键: C-c d 前缀
 (defvar my/debug-map
   (let ((map (make-sparse-keymap)))
@@ -102,6 +162,9 @@
     (define-key map (kbd "l") #'my/gdb-layout)
     (define-key map (kbd "m") #'gdb-many-windows)
     (define-key map (kbd "R") #'gdb-restore-windows)
+    ;; 远程 / 交叉调试 (gdbserver)
+    (define-key map (kbd "M") #'my/gdb-multiarch-start)
+    (define-key map (kbd "e") #'my/gdb-remote-connect)
     ;; 在别的文件里翻代码后, 一键把源码窗口拉回当前执行点
     (define-key map (kbd "j") #'gud-refresh)
     ;; 按需弹出被精简掉的缓冲区
