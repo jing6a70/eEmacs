@@ -1,23 +1,45 @@
 ;;; debug-dape.el --- dape 调试前端 (GDB via DAP) -*- lexical-binding: t; -*-
 ;; /core/debug-dape.el
 ;;
-;; dape 是 DAP (Debug Adapter Protocol) 客户端, 对 C/C++ 直接调用
-;; `gdb --interpreter=dap' (需要 gdb >= 14.1, 本机 15.1 可用).
-;; 和 core/debug.el 的 gdb-mi 并存, 互不干扰:
-;;   C-c d ...  gdb-mi (MI 协议, 功能最全)
-;;   C-c g ...  dape  (DAP 协议, 界面更接近 IDE)
+;; 只使用 dape (GNU ELPA): 走 Debug Adapter Protocol, 对 C/C++ 调用
+;; `gdb --interpreter=dap' (需要 gdb >= 14.1). 远程调试用 `gdb-multiarch'
+;; attach 到 gdbserver, 见 my/dape-remote.
 ;;
-;; 安装: M-x package-install RET dape  (GNU ELPA, 依赖 jsonrpc)
+;; 安装: M-x package-install RET dape  (依赖 jsonrpc)
+;;
+;; 常用入口:
+;;   C-c g g  本地调试 (自动从 Makefile 的 TARGET 猜程序)
+;;   C-c g t  远程 attach 到 gdbserver (ARM 交叉调试)
 ;;
 ;;; Code:
 
 (require 'dape nil t)
 
-;; 这两个变量定义在 core/debug.el (gdb-mi 的远程调试也用), 这里只声明以免编译告警
-(defvar my/gdb-remote-host)
-(defvar my/gdb-remote-port)
-(defvar my/gdb-source-path-mapping)
-(defvar my/gdb-solib-search-path)
+;;; 可选: 远程 / 交叉调试参数
+(defcustom my/dape-remote-host "172.16.1.101"
+  "gdbserver 所在主机的默认地址."
+  :type 'string
+  :group 'dape)
+
+(defcustom my/dape-remote-port "1234"
+  "gdbserver 的默认端口."
+  :type 'string
+  :group 'dape)
+
+(defcustom my/dape-source-path-mapping
+  '(("/home/jingpeng/Desktop/virtDisk" . "/home/jingpeng/Desktop/sgc"))
+  "调试信息里的源码路径 -> 本机真实源码路径 的映射.
+交叉编译在别的机器/目录里做时, DWARF 里记的是构建机的路径;
+这里会翻译成 `set substitute-path', 通过 gdb 的 -ex 传进去.
+设为 nil 则不映射."
+  :type '(alist :key-type string :value-type string)
+  :group 'dape)
+
+(defcustom my/dape-solib-search-path nil
+  "非 nil 时作为 `set solib-search-path' 传给 gdb.
+例如交叉编译用的 Qt 库目录 /opt/qt-5.9.5-arm/lib."
+  :type '(choice (const :tag "不设置" nil) string)
+  :group 'dape)
 
 ;;; 从工程里猜可执行文件
 (defun my/dape--guess-program ()
@@ -31,7 +53,6 @@
                "^TARGET[ \t]*[:+?]?=[ \t]*\\([^ \t\n#]+\\)" nil t)
           (expand-file-name (match-string 1) default-directory))))))
 
-;; 没有 Makefile 时按常见惯例猜一个
 (defun my/dape--read-program ()
   "读取并返回要调试的可执行文件路径."
   (let ((default (or (my/dape--guess-program)
@@ -39,6 +60,7 @@
     (read-file-name "Program: " (file-name-directory default)
                     nil t (file-name-nondirectory default))))
 
+;;; 本地调试
 (defun my/dape-start (&optional program)
   "启动 dape 调试当前工程的可执行文件 PROGRAM.
 默认取 Makefile 的 TARGET (例如 ./demo), 没有则用当前目录的 a.out.
@@ -63,24 +85,23 @@ minibuffer 里会预填 `gdb :program ...', 回车确认即可开始."
         (if (eq dape-buffer-window-arrangement 'right) 'gud 'right))
   (message "dape 布局: %s (下次启动生效)" dape-buffer-window-arrangement))
 
-
-;;; 远程 / 交叉调试: dape 原生 attach 到 gdbserver
-;; GDB 15 的 DAP attach 支持 :target 参数, 内部执行 `target remote HOST:PORT';
-;; 所以不需要 gdb-mi 也能调远程, 只要本地有带符号的二进制.
+;;; 远程 / 交叉调试
+;; GDB 15 的 DAP attach 支持 :target 参数, 内部执行 `target remote HOST:PORT',
+;; 所以 dape 原生就能连 gdbserver, 不需要 gdb-mi.
 (defun my/dape--remote-config (program host port)
   "构造 attach 到 HOST:PORT 上 gdbserver 的 dape 配置.
 PROGRAM 是本地带调试符号的二进制 (应与目标上运行的完全一致)."
   (let ((ex-args
          (append
           (list "-ex" "set pagination off")
-          (when my/gdb-source-path-mapping
+          (when my/dape-source-path-mapping
             (mapcan (lambda (m)
                       (list "-ex"
                             (format "set substitute-path %s %s" (car m) (cdr m))))
-                    my/gdb-source-path-mapping))
-          (when my/gdb-solib-search-path
+                    my/dape-source-path-mapping))
+          (when my/dape-solib-search-path
             (list "-ex" (format "set solib-search-path %s"
-                                my/gdb-solib-search-path))))))
+                                my/dape-solib-search-path))))))
     `(gdb-remote
       modes (c-mode c-ts-mode c++-mode c++-ts-mode)
       command "gdb-multiarch"
@@ -94,8 +115,8 @@ PROGRAM 是本地带调试符号的二进制 (应与目标上运行的完全一�
 PROGRAM 用本地那份与目标一致的二进制; HOST:PORT 是 gdbserver 地址."
   (interactive
    (list (read-file-name "Local program with symbols: " nil nil t)
-         (read-string "Target host: " my/gdb-remote-host)
-         (read-string "Port: " my/gdb-remote-port)))
+         (read-string "Target host: " my/dape-remote-host)
+         (read-string "Port: " my/dape-remote-port)))
   (unless (featurep 'dape)
     (user-error "dape 未安装: M-x package-install RET dape"))
   (unless (and program (file-executable-p program))
@@ -106,9 +127,10 @@ PROGRAM 用本地那份与目标一致的二进制; HOST:PORT 是 gdbserver 地�
     (setf (alist-get key dape-configs) config)
     (dape (dape--config-eval key (copy-tree config)))))
 
+;;; 会话默认值与快捷键
 (when (featurep 'dape)
 
-  ;; 右侧信息面板: 变量 / 栈 / 断点 / 线程, 比 gdb-mi 的 6 窗格清爽.
+  ;; 右侧信息面板: 变量 / 栈 / 断点 / 线程.
   ;; 想复刻 gdb-mi 的布局可改成 'gud, 或用 C-c g l 切换.
   (setq dape-buffer-window-arrangement 'right)
 

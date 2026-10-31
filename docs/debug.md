@@ -1,131 +1,34 @@
-# GDB 调试（core/debug.el）
+# dape 调试（core/debug-dape.el）
 
-基于 Emacs 内置的 **GUD + gdb-mi**，不依赖第三方包。前置条件：
+只用 [dape](https://elpa.gnu.org/packages/dape.html)（GNU ELPA）这一个第三方包，走
+Debug Adapter Protocol，对 C/C++ 调用 `gdb --interpreter=dap`。
 
-- 系统装有 `gdb`（`gdb --version` 能跑）；
-- 程序用 `-g` 编译，最好再关掉优化（`-O0`），否则变量可能被优化掉。
+前置条件：
 
-## 快速开始
+- `dape` 已安装（依赖 `jsonrpc`）：`M-x package-install RET dape`；
+- `gdb >= 14.1`（DAP 支持）；远程 ARM 目标另需 `gdb-multiarch`；
+- 程序用 `-g` 编译，最好 `-O0`。
 
-1. 打开要调试的源码，例如 `~/Desktop/c-debug-demo/main.c`；
-2. `C-c d g`（或 `M-x gdb`），在 minibuffer 输入：
+> 配置里已经**不再提供 gdb-mi 的 `C-c d` 前缀**。需要 MI 能力时可以手动
+> `M-x gdb`，但日常调试统一走 `C-c g`。
 
-   ```text
-   gdb -i=mi ./demo
-   ```
+## 快速开始（本地）
 
-3. 会话启动后的布局：
+1. 打开源码，或直接在工程根目录；
+2. `C-c g g` → 自动从 Makefile 的 `TARGET` 猜出可执行文件并预填
+   `gdb :program "..."`，回车即可；
+3. 程序停在启动处，之后用 `C-c g b` 打断点、`C-c g c` 继续。
 
-   ```text
-   +----------------------------+--------------------------+
-   |                            |  *locals of demo*        |
-   |         源码缓冲区          +--------------------------+
-   |                            |  *stack frames of demo*  |
-   +----------------------------+--------------------------+
-   ```
-
-   gdb-mi 默认是 6 窗格（`gud` / 源码 / locals / io / stack / breakpoints），
-   终端里太挤，所以这里只保留三格，其余面板按需弹出；
-4. `C-c d b` 在当前行打断点，`C-c d r` 运行，`C-c d n` 单步，`C-c d p` 打印表达式。
-
-## 布局
-
-| 操作 | 说明 |
-|---|---|
-| `C-c d l` | 重新整理成"左源码 + 右 locals/stack"三窗格 |
-| `C-c d m` | 切回 gdb-mi 官方 6 窗格（`C-c d l` 再收回来） |
-| `C-c d G` | 显示 `*gud-...*` 命令缓冲区，直接敲 GDB 命令 |
-| `C-c d L` / `S` / `K` / `T` / `I` | 按需弹出 局部变量 / 调用栈 / 断点 / 线程 / 程序输出 |
-| `C-c d R` | 恢复窗口布局 |
-| `C-c d j` | 翻走之后回到当前执行点（`gud-refresh`） |
-
-右侧列宽度取屏宽的 30%，限制在 24~48 列之间，所以终端和大屏都不会失衡。
-
-### 想要自己的持久布局
-
-不用改代码，走 gdb-mi 自带的 layout 文件：
-
-1. 在调试会话里把窗口摆成你想要的样子；
-2. `M-x gdb-save-window-configuration`，保存到 `~/.emacs.d/gdb-layout.eld`；
-3. 在 `core/debug.el` 里加一行：
-
-   ```elisp
-   (setq gdb-default-window-configuration-file "gdb-layout.eld")
-   ```
-
-之后每次启动 gdb 都会加载这个布局（`C-c d l` 的自定义布局会被它接管）。
-layout 文件只记录窗口结构和缓冲区类型（源码/命令/locals/stack 等），不绑定具体文件名。
-
-## 默认行为
-
-| 设置 | 说明 |
-|---|---|
-| `gdb-many-windows t` | 源码跟随、缓冲区创建依赖它；实际布局由 `my/gdb-layout` 精简 |
-| `gdb-show-main t` | 启动后直接停在 `main` 并显示源码 |
-| `gdb-restore-window-configuration-after-quit t` | 退出调试后恢复原来的窗口布局 |
-| `gdb-delete-out-of-scope t` | 变量离开作用域后从 `*locals of ...*` 移除 |
-| `gdb-debuginfod-enable-setting nil` | 不询问也不下载 debuginfod 的源码/调试信息 |
-| `gud-tooltip-mode 1` | 鼠标悬停显示变量值（仅 GUI） |
-
-## 快捷键（`C-c d` 前缀）
+## 快捷键（`C-c g` 前缀）
 
 | 按键 | 作用 |
 |---|---|
-| `C-c d g` | 启动 gdb（`M-x gdb`） |
-| `C-c d b` / `C-c d B` | 当前行 打断点 / 删断点 |
-| `C-c d t` | 当前行 打临时断点 |
-| `C-c d r` | 从头运行（run） |
-| `C-c d c` | 继续运行（continue） |
-| `C-c d n` / `C-c d s` | 单步跳过 / 单步进入（源码级） |
-| `C-c d o` / `C-c d i` | 单步跳过 / 进入（指令级） |
-| `C-c d f` | 运行到当前函数返回（finish） |
-| `C-c d u` | 运行到当前行（until） |
-| `C-c d p` | 打印光标处的表达式 |
-| `C-c d w` | 监视光标处的表达式 |
-| `C-c d j` | 回到当前执行点（刷新源码窗口） |
-| `C-c d P` | 中断正在运行的程序（等价 `*gud*` 里的 `C-c C-c`） |
-| `C-c d l` | 重新整理为精简布局 |
-| `C-c d m` | 切回官方 6 窗格布局 |
-| `C-c d R` | 恢复窗口布局 |
-| `C-c d G` | 显示 `*gud-...*` 命令缓冲区 |
-| `C-c d L` / `S` / `K` / `T` / `I` | 弹出 局部变量 / 调用栈 / 断点 / 线程 / 程序输出 |
-
-> `gud-break` / `gud-next` 这些命令是 gdb 会话启动时才由 gdb-mi 定义的，所以
-> 没有会话时按 `C-c d b` 会提示"还没有 GDB 会话"，而不是报 `void-function`。
-
-## 多文件工程
-
-多文件调试不需要额外配置，关键是知道四个入口：
-
-| 想做的事 | 操作 |
-|---|---|
-| 程序停在别的文件里 | 不用操作，源码窗口会自动切过去 |
-| 看调用栈里另一帧的代码 | 在 `*stack frames of ...*` 里 `RET` 选帧，源码随之跨文件跳转 |
-| 在另一文件里打断点 | 打开该文件，光标放到行上 `C-c d b`；或在 `*gud-...*` 里 `break file.c:行号` |
-| 跳到已有断点 | 在 `*breakpoints of ...*` 里 `RET` |
-| 想翻别的源码文件 | `C-x b` / `C-x C-b`（ibuffer），只换当前窗口的 buffer，布局不变 |
-| 翻走之后回到断点处 | `C-c d j`（`gud-refresh`） |
-
-示例工程：`~/Desktop/c-debug-demo`（main.c / score.c / stats.c，跨文件调用栈）。
-
-## dape（DAP 前端，`C-c g`）
-
-`core/debug-dape.el` 额外接入了 [dape](https://elpa.gnu.org/packages/dape.html)，走 GDB 14.1+ 自带的 DAP 接口：
-
-```text
-gdb --interpreter=dap
-```
-
-与 gdb-mi 并存，两套前缀各管各的：`C-c d` 是 MI，`C-c g` 是 DAP。
-
-| 按键 | 作用 |
-|---|---|
-| `C-c g g` | 启动调试（自动从 Makefile 的 `TARGET` 猜可执行文件，回车确认） |
-| `C-c g t` | 远程 attach 到 gdbserver（gdb-multiarch + DAP，见下文） |
-| `C-c g b` / `B` | 当前行 断点 开关 / 删除 |
+| `C-c g g` | 本地启动（自动猜程序） |
+| `C-c g t` | 远程 attach 到 gdbserver（见下文） |
+| `C-c g b` / `B` | 当前行 断点开关 / 删除 |
 | `C-c g c` / `n` / `s` / `o` / `u` | 继续 / 单步跳过 / 步入 / 步出 / 运行到当前行 |
 | `C-c g p` | 暂停 |
-| `C-c g r` / `f` | 重跑整个会话 / 重跑到当前帧（会话已结束也能用） |
+| `C-c g r` / `f` | 重跑整个会话 / 重跑到当前帧（会话结束后也能用） |
 | `C-c g e` / `w` | 求值表达式 / 监视光标处表达式 |
 | `C-c g i` / `R` / `d` | 信息面板 / REPL / 反汇编 |
 | `C-c g l` | 布局在 `'right`（右侧面板）和 `'gud`（gdb-mi 风格）之间切换 |
@@ -133,102 +36,94 @@ gdb --interpreter=dap
 | `C-c g q` / `k` | 结束会话 / 杀掉会话 |
 | `C-c g ?` | dape 菜单 |
 
-要点：
+布局默认是右侧信息面板（变量/栈/断点/线程）+ 左侧源码；`C-c g l` 可切回
+gdb-mi 的那种布局（下次启动生效）。
 
-- 首次启动会在 minibuffer 预填 `gdb :program "/path/to/demo"`，直接回车；
-- 界面是右侧变量/栈/断点/线程面板、左边源码，比 gdb-mi 的 6 窗格干净；
-- dape 的断点在源码缓冲区里有 overlay，与 gdb-mi 的断点互不影响（两套各存各的）；
-- 已默认设置 `defer-launch-attach t`：GDB 的 DAP 收到 launch 就开始跑程序，
-  之后再下发断点会被以 `notStopped` 拒绝，断点等于失效（GDB bug 32090）。
-  加了这一项后断点才会在启动时生效；
-- 需要先 `M-x compile` 编译出带 `-g` 的可执行文件；
-- 想从头再跑一遍：`C-c g r`（`dape-restart`，复用上次配置；会话已退出也有效），
-  或在 `*dape-repl*` 里敲 `restart`；
-- 不支持 gdb-mi 的 MI 专属玩法（attach PID、core dump 等），那些继续用 `C-c d`。
+## 断点
 
-## 远程 / ARM 交叉调试（gdbserver，`C-c d`）
+- 源码里光标放目标行，`C-c g b`；`C-c g B` 删除；断点会在源码里画 overlay；
+- 条件断点：`M-x dape-breakpoint-expression`（当前行 + 表达式）；
+- 断点/线程/栈都在 `C-c g i` 打开的信息面板里，回车可跳转；
+- 下断点前建议先确保会话停着（`C-c g p`），否则要等程序停下来才生效。
 
-适合"二进制跑在嵌入式 ARM 设备上，源码和 gdb 在 PC 上"的场景。
-两条路都能用：
+## 重跑
 
-- **dape 原生 attach（推荐，`C-c g t`）**：GDB 15 的 DAP `attach` 请求支持 `:target`
-  参数，内部就是 `target remote HOST:PORT`，不需要额外脚本；
-- **gdb-mi（`C-c d M` + `C-c d e`）**：MI 协议，适合需要 attach PID、core dump
-  这类 MI 专属能力的时候。
+- `C-c g r`（`dape-restart`）：复用上次配置重启；
+- `C-c g f`：只重跑到当前帧；
+- 也可以在 `*dape-repl*` 里敲 `restart`。
+
+## 远程 / ARM 交叉调试（gdbserver）
+
+GDB 15 的 DAP `attach` 请求支持 `:target` 参数，内部执行 `target remote`，
+所以 dape **原生**就能连 gdbserver，不需要额外脚本。
 
 ### 准备
 
-- 本地要 `gdb-multiarch`（本机 `/usr/bin/gdb` 只支持 x86_64，`set architecture arm` 会报 Undefined）：
+- 本地装 `gdb-multiarch`（本机 `/usr/bin/gdb` 只支持 x86_64）：
 
   ```sh
   sudo apt install gdb-multiarch
   ```
 
-- 目标上要有 armhf 的 `gdbserver`，并在目标上启动：
+- 目标上启动 gdbserver（armhf）：
 
   ```sh
-  # 直接运行
-  gdbserver :1234 /path/to/GreenPulse-V6.7.1_3
-  # 或 attach 到已经在跑的进程（GUI 程序更稳，避免 DISPLAY/启动参数问题）
-  gdbserver --attach :1234 $(pidof GreenPulse-V6.7.1_3)
+  gdbserver :1234 /opt/QtMc/GreenPulse
+  # 或 attach 已运行的进程
+  gdbserver --attach :1234 $(pidof GreenPulse)
   ```
 
-- PC 能连到 `172.16.1.101:1234`：`nc -z 172.16.1.101 1234`。
+- 确认 PC 能连：`nc -z 172.16.1.101 1234`。
 
-### 方式一：dape（推荐）
+### 用 dape 连
 
-1. `C-c g t` → 选本地那份和设备一致的二进制
-   （例如 `~/Desktop/sgc/build-GreenPulse-xrdARM-Debug/Src/GreenPulse-device`）；
+1. `C-c g t` → 选本地那份**和目标完全一致**的二进制；
 2. 回车确认 host/port（默认 `172.16.1.101:1234`）；
-3. dape 用 `gdb-multiarch --interpreter=dap` 启动，并发 `attach`（`:target`），
-   等价于 `target remote`；`my/gdb-source-path-mapping` 和 `my/gdb-solib-search-path`
-   会被翻译成 `-ex "set substitute-path ..."` 一起带进去；
-4. 之后 `C-c g b` 断点、`C-c g c` 继续、`C-c g n` 单步。
+3. dape 用 `gdb-multiarch --interpreter=dap` 起会话，发 `attach`（`:target`），
+   等价于 `target remote`；`my/dape-source-path-mapping` /
+   `my/dape-solib-search-path` 会被翻译成 `-ex "set ..."` 一起带进去；
+4. `C-c g c` 继续，`C-c g b` 断点。
 
-### 方式二：gdb-mi（MI）
+### 变量
 
-1. `C-c d M` → 选同一个二进制；
-2. `C-c d e` → 回车（默认 `172.16.1.101:1234`），自动执行：
-
-   ```text
-   target remote 172.16.1.101:1234
-   set substitute-path /home/jingpeng/Desktop/virtDisk /home/jingpeng/Desktop/sgc
-   ```
-
-3. 之后 `C-c d b` / `C-c d c` / `C-c d n`。
+| 变量 | 说明 |
+|---|---|
+| `my/dape-remote-host` | 默认 `172.16.1.101` |
+| `my/dape-remote-port` | 默认 `1234` |
+| `my/dape-source-path-mapping` | DWARF 里的构建机路径 → 本机源码路径 |
+| `my/dape-solib-search-path` | 可选，`set solib-search-path`（追 Qt 库时用） |
 
 ### 四个坑
 
-- **源码路径映射是必须的**：这个二进制的 DWARF 里写着构建机路径
-  `/home/jingpeng/Desktop/virtDisk/...`，实际源码在 `/home/jingpeng/Desktop/sgc`。
-  映射放在 `my/gdb-source-path-mapping`，换机器只改这一个变量；
-- 追 Qt 库内部需要目标库：`set sysroot <rootfs 副本>`，或退一步
-  `set solib-search-path /opt/qt-5.9.5-arm/lib`（对应 `my/gdb-solib-search-path`）。
-  只调试自己代码的话不需要；
-- `gdbserver` 必须和目标 ABI 匹配（armhf/hard-float），设备上没有就从 SDK 拷；
 - **一定用设备上那份二进制做符号**：本地构建产物和设备镜像里的可能不是同一次构建
-  （md5 不同），用错文件行号/栈会整体偏移。直接从设备拉一份：
+  （md5 不同），用错文件行号/栈会整体偏移：
 
   ```sh
   scp xrd@172.16.1.101:/opt/QtMc/GreenPulse <build>/Src/GreenPulse-device
   ```
 
-  然后在 `C-c d M` 里选这个 `GreenPulse-device` 去调；
-- 断点/单步走的是远程协议，会比本地慢一点，属正常。
+- **源码路径映射**：这个二进制的 DWARF 里写着 `/home/jingpeng/Desktop/virtDisk/...`，
+  实际源码在 `/home/jingpeng/Desktop/sgc`，映射放在 `my/dape-source-path-mapping`；
+- 一个 gdbserver 只能被一个客户端连接，连之前先确认设备上没有别的 gdb 会话；
+- `gdbserver` 必须和目标 ABI 匹配（armhf/hard-float）；普通 `gdbserver :1234 ./prog`
+  在 gdb 断开后会退出，所以远程重跑通常要去设备上重起 gdbserver。
 
-## 备选方案（第三方）
+## 多文件工程
 
-| 方案 | 适合 | 代价 |
-|---|---|---|
-| `realgud`（GNU ELPA） | 想要轻量、单窗口 + 少量 popup，支持 gdb/pdb/bashdb 等多语言 | 功能比 gdb-mi 少，没有 MI 变量树 |
-| `dap-mode` + `dap-gdb-lldb` | 已有 lsp-mode 生态，想统一 UI | 依赖重，需要 lsp 和额外配置 |
-| `gdb -tui` 跑在 `M-x term` 里 | 只想要真·TUI，界面最紧凑 | 源窗口不能编辑，键位受终端限制 |
+| 想做的事 | 操作 |
+|---|---|
+| 停在别的文件 | 不用管，源码窗口会自动切过去 |
+| 看别的栈帧 | `C-c g i` 打开信息面板，栈帧里回车 |
+| 在别的文件打断点 | 打开该文件，`C-c g b` |
+| 翻别的源码 | `C-x b` / `C-x C-b`（ibuffer） |
+| 会话结束后重跑 | `C-c g r` |
 
-内置 gdb-mi 加自定义布局通常已经够用，换第三方前建议先试上面的 layout 文件机制。
+示例工程：`~/Desktop/c-debug-demo`（main.c / score.c / stats.c，跨文件调用栈）。
 
 ## 备注
 
-- GDB 命令可以直接在 `*gud-demo*`（名字随程序而变）缓冲区输入，例如条件断点
-  `break score_find if strcmp(name, "carol") == 0`；
-- 程序输出在 `*input/output of demo*`，GDB 交互在 `*gud-demo*`；
-- 想看汇编/寄存器：`M-x gdb-display-disassembly-buffer`、`M-x gdb-display-registers-buffer`。
+- `*dape-repl*` 里可用的命令：`debug, next, continue, pause, step, out, up, down,
+  threads, stack, modules, sources, breakpoints, scope, watch, eval, restart,
+  kill, disconnect, quit`；其它输入会直接发给调试器；
+- 程序输出在 REPL，变量/栈/断点面板用 `C-c g i`；
+- 想看汇编/寄存器：`C-c g d`（反汇编），寄存器在信息面板里。
