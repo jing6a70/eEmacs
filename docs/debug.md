@@ -1,14 +1,14 @@
 # dape 调试（modules/use-dape.el）
 
-配置只有十几行：装包、把 `C-c g` 绑到 dape 自带的 `dape-global-map`、
-加一个 ARM 远程的 attach 配置。其余命令都用 `M-x`。
+配置只有十几行：装包、把 `C-c g` 绑到 dape 自带的 `dape-global-map`。
+其余命令都用 `M-x`。
 
-前置：dape 已安装（`M-x package-install RET dape`，依赖 `jsonrpc`），
-`gdb >= 14.1`；调试 ARM 目标再装 `gdb-multiarch`。
+前置：`M-x package-install RET dape`（依赖 `jsonrpc`，Emacs 29.3 已内置），
+`gdb >= 14.1`，程序用 `-g -O0` 编译。
 
 ## 用法
 
-`C-c g d`（或 `M-x dape`），minibuffer 里输入配置名后回车，例如：
+`C-c g d`（或 `M-x dape`），minibuffer 里输入配置名和参数后回车：
 
 ```text
 gdb :program "./demo"
@@ -27,52 +27,14 @@ gdb :program "./demo"
 | `C-c g q` / `K` | 退出 / 杀掉会话 |
 | `C-c g ?` | dape 菜单 |
 
-源码里断点会以 overlay 显示；变量、栈、断点、线程在 `C-c g i` 打开的面板里。
+断点以 overlay 显示在源码里；变量、栈、断点、线程在 `C-c g i` 打开的面板里。
 布局默认左侧源码 + 右侧面板（`dape-buffer-window-arrangement 'right`）。
 
-## 远程 / ARM
+## 说明
 
-配置里已经有一个 `gdb-remote`，用 `gdb-multiarch` attach 到 gdbserver：
-
-```text
-C-c g d → 输入 gdb-remote → 回车
-```
-
-它等价于：
-
-```text
-gdb-multiarch --interpreter=dap
-  -ex "set substitute-path /home/jingpeng/Desktop/virtDisk /home/jingpeng/Desktop/sgc"
-  attach :program <GreenPulse-device>  :target 172.16.1.101:1234
-```
-
-换目标/换二进制时，在启动那行后面追加覆盖即可，例如：
-
-```text
-gdb-remote :program "/other/bin" :target "192.168.1.10:1234"
-```
-
-多句 override 用空格分隔，`TAB` 可以补全配置名。
-
-### 注意
-
-- **用设备上那份二进制**做 `:program`（md5 要和目标一致），否则行号/栈会偏：
-
-  ```sh
-  scp xrd@172.16.1.101:/opt/QtMc/GreenPulse <build>/Src/GreenPulse-device
-  ```
-
-- 配置里那条 `-ex "set substitute-path ..."` 是因为该二进制的 DWARF 记的是
-  构建机路径 `/home/jingpeng/Desktop/virtDisk`，实际源码在
-  `/home/jingpeng/Desktop/sgc`；换工程就改这一行；
-- 一个 gdbserver 只能被一个客户端连接；普通 `gdbserver :1234 ./prog`
-  在 gdb 断开后会退出，重跑要去设备上重起；
-- 配置里默认设置了 `defer-launch-attach t`：GDB 的 DAP 收到 launch 就启动程序，
-  断点随后下发会被以 `notStopped` 拒绝（GDB bug 32090），推迟 launch 才生效。
-
-## 备注
-
-- dape 走 DAP，GDB 侧没有 MI 的 attach PID / core dump 等能力；需要时用内置
-  `M-x gdb`（本配置不再提供 `C-c d` 前缀）；
+- 配置里设置了 `defer-launch-attach t`：GDB 的 DAP 收到 launch 会立刻启动程序，
+  断点随后下发会被以 `notStopped` 拒绝（GDB bug 32090），推迟 launch 才生效；
+- dape 走 DAP，不依赖也不共用内置 gdb-mi；需要 MI 专属能力（core dump 等）
+  时手动 `M-x gdb`，本配置不提供 `C-c d` 前缀；
 - `*dape-repl*` 里可以直接输入 dape 命令（`continue`、`next`、`stack`、
   `breakpoints`、`restart`、`quit` 等），其它输入会发给调试器。
