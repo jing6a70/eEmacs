@@ -23,14 +23,14 @@
 ;; 加载core子目录配置
 (mapc (lambda (module)
         (load (expand-file-name module core-dir) nil t))
-      '("elpa" "view" "edit" "debug-dape" "theme" "suppress"))
+      '("elpa" "view" "edit" "theme" "suppress"))
 
 ;; 注册modules子目录
 (add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
 
 ;; 模块加载列表
 (defvar my/local-modules
-  '(use-magit)) 
+  '(use-magit use-dape)) 
 
 (dolist (module my/local-modules)
   (require module nil 'noerror))

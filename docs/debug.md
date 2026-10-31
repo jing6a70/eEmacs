@@ -1,4 +1,4 @@
-# dape 调试（core/debug-dape.el）
+# dape 调试（modules/use-dape.el）
 
 只用 [dape](https://elpa.gnu.org/packages/dape.html)（GNU ELPA）这一个第三方包，走
 Debug Adapter Protocol，对 C/C++ 调用 `gdb --interpreter=dap`。
