@@ -123,6 +123,7 @@ gdb --interpreter=dap
 | `C-c g b` / `B` | 当前行 断点 开关 / 删除 |
 | `C-c g c` / `n` / `s` / `o` / `u` | 继续 / 单步跳过 / 步入 / 步出 / 运行到当前行 |
 | `C-c g p` | 暂停 |
+| `C-c g r` / `f` | 重跑整个会话 / 重跑到当前帧（会话已结束也能用） |
 | `C-c g e` / `w` | 求值表达式 / 监视光标处表达式 |
 | `C-c g i` / `R` / `d` | 信息面板 / REPL / 反汇编 |
 | `C-c g l` | 布局在 `'right`（右侧面板）和 `'gud`（gdb-mi 风格）之间切换 |
@@ -136,6 +137,8 @@ gdb --interpreter=dap
 - 界面是右侧变量/栈/断点/线程面板、左边源码，比 gdb-mi 的 6 窗格干净；
 - dape 的断点在源码缓冲区里有 overlay，与 gdb-mi 的断点互不影响（两套各存各的）；
 - 需要先 `M-x compile` 编译出带 `-g` 的可执行文件；
+- 想从头再跑一遍：`C-c g r`（`dape-restart`，复用上次配置；会话已退出也有效），
+  或在 `*dape-repl*` 里敲 `restart`；
 - 不支持 gdb-mi 的 MI 专属玩法（attach PID、core dump 等），那些继续用 `C-c d`。
 
 ## 备选方案（第三方）

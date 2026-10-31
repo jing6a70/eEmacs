@@ -80,6 +80,9 @@ minibuffer 里会预填 `gdb :program ...', 回车确认即可开始."
       (define-key map (kbd "o") #'dape-step-out)
       (define-key map (kbd "u") #'dape-until)
       (define-key map (kbd "p") #'dape-pause)
+      ;; 重跑: 会话结束后也能用 (复用上次配置, 见 dape-restart)
+      (define-key map (kbd "r") #'dape-restart)
+      (define-key map (kbd "f") #'dape-restart-frame)
       ;; 查看
       (define-key map (kbd "e") #'dape-evaluate-expression)
       (define-key map (kbd "w") #'dape-watch-dwim)
