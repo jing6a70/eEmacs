@@ -1,6 +1,21 @@
 ;;; use-dape.el --- dape 配置 -*- lexical-binding: t; -*-
 
 (use-package dape
-  :ensure t)
+  :ensure t
+  :config
+  (defvar my/dape-map
+    (with-no-warnings
+      (let ((map (make-sparse-keymap)))
+        (keymap-set map "s" #'dape)
+        (keymap-set map "c" #'dape-continue)
+        (keymap-set map "u" #'dape-until)
+        (keymap-set map "b" #'dape-breakpoint-toggle)
+        (keymap-set map "l" #'dape-breakpoint-log)
+        (keymap-set map "r" #'dape-repl)
+        (keymap-set map "x" #'dape-evaluate-expression)
+        (keymap-set map "<" #'dape-stack-select-up)
+        (keymap-set map ">" #'dape-stack-select-down)
+        map)))
+  (keymap-set global-map "C-c d" my/dape-map))
 
 (provide 'use-dape)
