@@ -4,45 +4,40 @@
 (use-package dape
   :ensure t
   :config
-  (defvar my/dape-map
-    (with-no-warnings
-      (let ((map (make-sparse-keymap)))
-        (keymap-set map "s" #'dape)
-        (keymap-set map "c" #'dape-continue)
-        (keymap-set map "u" #'dape-until)
-        (keymap-set map "b" #'dape-breakpoint-toggle)
-        (keymap-set map "l" #'dape-breakpoint-log)
-        (keymap-set map "r" #'dape-repl)
-        (keymap-set map "x" #'dape-evaluate-expression)
-        (keymap-set map "<" #'dape-stack-select-up)
-        (keymap-set map ">" #'dape-stack-select-down)
-        map)))
-  (keymap-set global-map "C-c d" my/dape-map))
+  (when-let* ((cfg (assq 'gdb dape-configs)))
+    (setcdr cfg (plist-put (cdr cfg) 'defer-launch-attach t)))
+  (setq dape-buffer-window-arrangement 'right)
+  (keymap-set global-map "C-c d" ...))
 ```
 
-| 键 | 作用 |
-|---|---|
-| `C-c d s` | 启动 dape（minibuffer 里输入 `gdb :program "..."`） |
-| `C-c d c` | 继续 |
-| `C-c d n` | 单步跳过（next） |
-| `C-c d i` | 步入（step in） |
-| `C-c d o` | 步出（step out） |
-| `C-c d u` | 运行到当前行 |
-| `C-c d b` | 断点开关 |
-| `C-c d l` | log 断点 |
-| `C-c d r` | REPL |
-| `C-c d x` | 求值表达式 |
-| `C-c d w` | watch 光标处的变量 |
-| `C-c d <` / `C-c d >` | 向上 / 向下切换栈帧 |
+按键按 gdb 原生命令的字母来，`C-c d d` 进入调试。
 
-其余操作用 `M-x`：`dape-next`、`dape-step-in`、`dape-step-out`、`dape-pause`、
-`dape-restart`、`dape-info`、`dape-quit` 等。
+| 键 | gdb 命令 | 作用 |
+|---|---|---|
+| `C-c d d` | `run` | 启动调试（minibuffer 里输入 `gdb :program "..."`） |
+| `C-c d c` | `continue` | 继续 |
+| `C-c d n` | `next` | 单步跳过 |
+| `C-c d s` | `step` | 单步（步入） |
+| `C-c d f` | `finish` | 运行到函数返回（步出） |
+| `C-c d u` | `until` | 运行到当前行之后 |
+| `C-c d r` | `run`(重启) | 重跑会话 |
+| `C-c d b` | `break` | 断点开关 |
+| `C-c d l` | — | log 断点（dape 扩展） |
+| `C-c d p` | `print` | 求值表达式 |
+| `C-c d w` | `watch` | 监视变量 |
+| `C-c d i` | `info` | 信息面板（变量/栈/断点） |
+| `C-c d x` | `examine` | 查看内存 |
+| `C-c d q` / `k` | `quit` / `kill` | 退出 / 杀掉会话 |
+| `C-c d R` | — | dape REPL |
+| `C-c d <` / `>` | `up` / `down` | 切换栈帧 |
 
-dape 自己的 `C-x C-a` 默认前缀仍然可用（`dape-key-prefix`）。
+dape 自带的 `C-x C-a` 前缀仍然可用；`M-x` 也行。
 
 ## 注意
 
-- 信息面板在右侧（配置里 `dape-buffer-window-arrangement` 设为 `'right`）；
-- 点 fringe 断点圆圈要 `M-x dape-breakpoint-global-mode`；
+- 右侧面板：`dape-buffer-window-arrangement` 设为 `'right`，源码在左；
 - 配置里设置了 `defer-launch-attach t`：GDB 的 DAP 收到 launch 会先跑程序，
-  断点随后下发会被以 `notStopped` 拒绝（GDB bug 32090）。删掉它断点就会失效。
+  断点随后下发会被以 `notStopped` 拒绝（GDB bug 32090）。删掉它断点会失效；
+- 启动命令注意引号闭合，例如 `gdb :program "~/Desktop/c-debug-demo/build/demo"`，
+  漏掉结尾 `"` 会被静默忽略并回退到默认 `a.out`；
+- 点 fringe 上的断点圆圈需要 `M-x dape-breakpoint-global-mode`。
