@@ -32,6 +32,7 @@
 | `C-c d l` | log 断点 |
 | `C-c d r` | REPL |
 | `C-c d x` | 求值表达式 |
+| `C-c d w` | watch 光标处的变量 |
 | `C-c d <` / `C-c d >` | 向上 / 向下切换栈帧 |
 
 其余操作用 `M-x`：`dape-next`、`dape-step-in`、`dape-step-out`、`dape-pause`、
