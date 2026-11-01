@@ -22,7 +22,7 @@
 
 | 键 | 作用 |
 |---|---|
-| `C-c d s` | 选程序并启动（`Program:` 提示，TAB 补全任意路径） |
+| `C-c d s` | 启动 dape（minibuffer 里输入 `gdb :program "..."`） |
 | `C-c d c` | 继续 |
 | `C-c d n` | 单步跳过（next） |
 | `C-c d i` | 步入（step in） |
