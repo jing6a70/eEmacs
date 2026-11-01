@@ -33,25 +33,6 @@
 
 dape 自带的 `C-x C-a` 前缀仍然可用；`M-x` 也行。
 
-## 信息面板里的单键（类似 magit）
-
-`*dape-info-*` 面板是 `special-mode` 只读缓冲区，配置里给它们绑了单键，
-不用 `C-c d` 前缀：
-
-| 键 | 作用 | 键 | 作用 |
-|---|---|---|---|
-| `c` | 继续 | `n` | 下一步 |
-| `s` | 步入 | `f` | 步出 |
-| `u` | until | `r` | 重启 |
-| `b` | 断点开关 | `p` | 求值 |
-| `w` | watch | `x` | 看内存 |
-| `R` | REPL | `TAB` | 切换面板 |
-
-`RET` 在面板行上跳转（栈帧/断点/源码行）。`*dape-repl*` 里不走单键，直接输入
-dape 命令词：`continue`、`next`、`step`、`out`、`stack`、`breakpoints`、`quit` 等。
-
-源码缓冲区里没有单键（会抢正常输入），仍然用 `C-c d` 前缀。
-
 ## 注意
 
 - 右侧面板：`dape-buffer-window-arrangement` 设为 `'right`，源码在左；

@@ -6,18 +6,6 @@
   (when-let* ((cfg (assq 'gdb dape-configs)))
     (setcdr cfg (plist-put (cdr cfg) 'defer-launch-attach t)))
   (setq dape-buffer-window-arrangement 'right)
-  (dolist (k '(("c" . dape-continue)
-               ("n" . dape-next)
-               ("s" . dape-step-in)
-               ("f" . dape-step-out)
-               ("u" . dape-until)
-               ("r" . dape-restart)
-               ("b" . dape-breakpoint-toggle)
-               ("p" . dape-evaluate-expression)
-               ("w" . dape-watch-dwim)
-               ("x" . dape-memory)
-               ("R" . dape-repl)))
-    (keymap-set dape-info-parent-mode-map (car k) (cdr k)))
   (keymap-set global-map "C-c d"
     (with-no-warnings
       (let ((map (make-sparse-keymap)))
