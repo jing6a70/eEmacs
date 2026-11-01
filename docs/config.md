@@ -195,6 +195,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `treemacs-follow-mode` | 光标移动时在树中定位当前文件 |
 | `treemacs-filewatch-mode` | 文件系统变动后自动刷新 |
 | `treemacs-git-mode 'deferred` | git 状态着色；deferred 变体需要 `python3` |
+| 首次打开 | 空 workspace 时默认填 project.el 的工程根（`my/treemacs--read-first-project-path` 覆盖了 treemacs 的当前目录默认值），避免把 `src/` 当成工程 |
 | 持久化 | 工程列表保存在 `~/.emacs.d/.cache/treemacs-persist`（`.cache/` 已 gitignore） |
 
 图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
