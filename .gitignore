@@ -1,5 +1,6 @@
 .config-auto.el
 places
+places.eld
 history
 recentf
 recentf.eld
