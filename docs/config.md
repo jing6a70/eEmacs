@@ -188,14 +188,14 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 | 内容 | 说明 |
 |---|---|
-| `C-c t` | 开关 treemacs 侧栏 |
+| `C-c t` | 开关侧栏；空 workspace 时自动加入当前工程（`my/treemacs-toggle`，走 project.el 的 `.git` 根，不弹目录选择） |
 | `C-c T` | `treemacs-add-and-display-current-project`，把当前工程挂进树里（projectile → project.el → 当前目录） |
 | 延迟加载 | `use-package ... :bind`，首次按键才真正加载 treemacs |
 | `treemacs-width 32` | 侧栏宽度 32 列 |
 | `treemacs-follow-mode` | 光标移动时在树中定位当前文件 |
 | `treemacs-filewatch-mode` | 文件系统变动后自动刷新 |
 | `treemacs-git-mode 'deferred` | git 状态着色；deferred 变体需要 `python3` |
-| 首次打开 | 空 workspace 时默认填 project.el 的工程根（`my/treemacs--read-first-project-path` 覆盖了 treemacs 的当前目录默认值），避免把 `src/` 当成工程 |
+| 首次打开 | 若仍走到 treemacs 自带的 `Project root:` 提示（例如直接 `M-x treemacs`），默认值取 project.el 工程根而不是当前目录 |
 | 持久化 | 工程列表保存在 `~/.emacs.d/.cache/treemacs-persist`（`.cache/` 已 gitignore） |
 
 图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
