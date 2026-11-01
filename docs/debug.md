@@ -22,6 +22,8 @@
 | `C-c d u` | `until` | 运行到当前行之后 |
 | `C-c d r` | `run`(重启) | 重跑会话 |
 | `C-c d b` | `break` | 断点开关 |
+| `C-c d e` | `break ... if` | 条件断点（当前行） |
+| `C-c d P` | — | 暂停/中断运行中的程序 |
 | `C-c d l` | — | log 断点（dape 扩展） |
 | `C-c d p` | `print` | 求值表达式 |
 | `C-c d w` | `watch` | 监视变量 |
