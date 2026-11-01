@@ -23,7 +23,7 @@
 │   ├── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
 │   ├── use-dashboard.el     # 启动欢迎页(dashboard)
 │   └── use-treemacs.el      # 左侧文件树(treemacs)
-└── docs/                    # 文档(config.md / debug.md / magit.md / quickstartguide.org)
+└── docs/                    # 文档(config.md / project.md / debug.md / magit.md / quickstartguide.org)
 ```
 
 ## 启动流程
@@ -200,6 +200,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
 `(treemacs-load-theme "nerd-icons")`，前提是系统已安装 Nerd Font。
+
+工程管理与侧栏的完整操作见 [project.md](project.md)。
 
 ## keybindings.el（个人快捷键）
 
