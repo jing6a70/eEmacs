@@ -30,7 +30,7 @@
 
 ;; 模块加载列表
 (defvar my/local-modules
-  '(use-magit)) 
+  '(use-magit use-dape)) 
 
 (dolist (module my/local-modules)
   (require module nil 'noerror))
