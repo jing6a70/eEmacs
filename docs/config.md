@@ -1,6 +1,6 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入三个第三方包：`magit`、`diff-hl`、`dape`
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入四个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
@@ -20,7 +20,8 @@
 │   └── suppress.el          # 字节编译告警收敛
 ├── modules/
 │   ├── use-magit.el         # magit + diff-hl
-│   └── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
+│   ├── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
+│   └── use-dashboard.el     # 启动欢迎页(dashboard)
 └── docs/                    # 文档(config.md / debug.md / magit.md / quickstartguide.org)
 ```
 
@@ -37,6 +38,7 @@ early-init.el
        ├─ core/suppress.el
        ├─ modules/use-magit.el     (my/local-modules)
        ├─ modules/use-dape.el
+       ├─ modules/use-dashboard.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -166,6 +168,19 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 注意：`my/dape-remote` 用 `read-file-name ... mustmatch=t` 选本地程序，**必须选已存在的文件**，不支持手输不存在的路径。
 
 调试用法（gdbserver、Qt Creator、断点、内存查看等）见 [debug.md](debug.md)。
+
+## modules/use-dashboard.el（启动欢迎页）
+
+| 内容 | 说明 |
+|---|---|
+| `use-package dashboard :ensure t` | 从 MELPA 安装，启动时显示欢迎页 |
+| `dashboard-items` | 最近工程 10 / 最近文件 5 / 书签 3 |
+| `dashboard-projects-backend 'project-el` | 工程列表复用 project.el 的 `project-list-file`，与 `C-x p p` 共用同一份历史 |
+| `dashboard-startup-banner 'logo`、`dashboard-center-content t` | 显示 Emacs logo，内容居中 |
+| `dashboard-setup-startup-hook` | 仅在**不带文件参数**启动时生效（`emacs foo.c` 不会显示欢迎页） |
+
+工程区块要显示内容，需先让工程进入历史：在工程里执行 `M-x project-remember-project`，
+或 `M-x project-remember-projects-under RET ~/Desktop RET`。欢迎页里按 `p` 跳到工程区块、`r` 跳到最近文件区块。
 
 ## keybindings.el（个人快捷键）
 
