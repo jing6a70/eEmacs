@@ -1,6 +1,6 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入四个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入五个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
@@ -21,7 +21,8 @@
 ├── modules/
 │   ├── use-magit.el         # magit + diff-hl
 │   ├── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
-│   └── use-dashboard.el     # 启动欢迎页(dashboard)
+│   ├── use-dashboard.el     # 启动欢迎页(dashboard)
+│   └── use-treemacs.el      # 左侧文件树(treemacs)
 └── docs/                    # 文档(config.md / debug.md / magit.md / quickstartguide.org)
 ```
 
@@ -39,6 +40,7 @@ early-init.el
        ├─ modules/use-magit.el     (my/local-modules)
        ├─ modules/use-dape.el
        ├─ modules/use-dashboard.el
+       ├─ modules/use-treemacs.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -181,6 +183,22 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 工程区块要显示内容，需先让工程进入历史：在工程里执行 `M-x project-remember-project`，
 或 `M-x project-remember-projects-under RET ~/Desktop RET`。欢迎页里按 `p` 跳到工程区块、`r` 跳到最近文件区块。
+
+## modules/use-treemacs.el（左侧文件树）
+
+| 内容 | 说明 |
+|---|---|
+| `C-c t` | 开关 treemacs 侧栏 |
+| `C-c T` | `treemacs-add-and-display-current-project`，把当前工程挂进树里（projectile → project.el → 当前目录） |
+| 延迟加载 | `use-package ... :bind`，首次按键才真正加载 treemacs |
+| `treemacs-width 32` | 侧栏宽度 32 列 |
+| `treemacs-follow-mode` | 光标移动时在树中定位当前文件 |
+| `treemacs-filewatch-mode` | 文件系统变动后自动刷新 |
+| `treemacs-git-mode 'deferred` | git 状态着色；deferred 变体需要 `python3` |
+| 持久化 | 工程列表保存在 `~/.emacs.d/.cache/treemacs-persist`（`.cache/` 已 gitignore） |
+
+图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
+`(treemacs-load-theme "nerd-icons")`，前提是系统已安装 Nerd Font。
 
 ## keybindings.el（个人快捷键）
 
