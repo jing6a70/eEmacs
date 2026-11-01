@@ -6,29 +6,25 @@
   (when-let* ((cfg (assq 'gdb dape-configs)))
     (setcdr cfg (plist-put (cdr cfg) 'defer-launch-attach t)))
   (setq dape-buffer-window-arrangement 'right)
+  
   (add-to-list 'dape-configs
                '(gdb-remote
                  modes (c-mode c-ts-mode c++-mode c++-ts-mode)
                  command "gdb-multiarch"
                  command-args
-                 ("--interpreter=dap"
-                  "-ex" "set confirm off"
-                  "-ex" "set substitute-path /home/jingpeng/Desktop/virtDisk /home/jingpeng/Desktop/sgc")
+                 ("--interpreter=dap")
                  :request "attach"))
+  
   (defun my/dape-remote (program host port)
     (interactive
-     (list (read-file-name
-            "Local program: "
-            (if (file-directory-p "~/Desktop/sgc/build-GreenPulse-xrdARM-Debug/Src/")
-                "~/Desktop/sgc/build-GreenPulse-xrdARM-Debug/Src/"
-              default-directory)
-            nil t)
+     (list (read-file-name "Local program: " default-directory nil t)
            (read-string "Target host: " "172.16.1.101")
            (read-string "Port: " "1234")))
     (let ((dape-command (cons 'gdb-remote
                               (list :program program
                                     :target (format "%s:%s" host port)))))
       (call-interactively #'dape)))
+  
   (keymap-set global-map "C-c d"
     (with-no-warnings
       (let ((map (make-sparse-keymap)))
