@@ -12,6 +12,7 @@
                  command "gdb-multiarch"
                  command-args
                  ("--interpreter=dap"
+                  "-ex" "set confirm off"
                   "-ex" "set substitute-path /home/jingpeng/Desktop/virtDisk /home/jingpeng/Desktop/sgc")
                  :request "attach"))
   (defun my/dape-remote (program host port)

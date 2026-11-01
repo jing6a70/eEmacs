@@ -35,6 +35,16 @@
 
 dape 自带的 `C-x C-a` 前缀仍然可用；`M-x` 也行。
 
+## 结束调试
+
+| 操作 | 效果 |
+|---|---|
+| `C-c d k` | 杀掉远端进程并断开（gdb 已设 `set confirm off`，不会卡在确认上） |
+| `C-c d q` | 同样走 terminate，尽量收尾并清缓冲区 |
+| `M-x dape-disconnect-quit` | 只断开，程序继续在设备上跑 |
+
+如果某个旧会话里 `C-c d k` 卡住，先在 `*dape-repl*` 里敲 `set confirm off` 再按。
+
 ## 注意
 
 - 右侧面板：`dape-buffer-window-arrangement` 设为 `'right`，源码在左；
