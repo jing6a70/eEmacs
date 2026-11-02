@@ -1,6 +1,6 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入七个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`、`hungry-delete`
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入八个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`、`hungry-delete`、`iedit`
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
@@ -24,7 +24,8 @@
 │   ├── use-dashboard.el     # 启动欢迎页(dashboard)
 │   ├── use-treemacs.el      # 左侧文件树(treemacs)
 │   ├── use-undo-tree.el     # 撤销树(undo-tree)
-│   └── use-hungry-delete.el # 连删空白(hungry-delete)
+│   ├── use-hungry-delete.el # 连删空白(hungry-delete)
+│   └── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
 └── docs/                    # 文档(config.md / project.md / debug.md / magit.md / quickstartguide.org)
 ```
 
@@ -45,6 +46,7 @@ early-init.el
        ├─ modules/use-treemacs.el
        ├─ modules/use-undo-tree.el
        ├─ modules/use-hungry-delete.el
+       ├─ modules/use-multi-edit.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -66,7 +68,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -235,6 +237,22 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 按键无需额外绑定：`DEL` / `C-d` 等通过 `[remap delete-backward-char]`、`[remap delete-forward-char]`、
 `[remap delete-char]` 接管，`c-mode` 的 `c-electric-backspace` / `c-electric-delete-forward` 也在其中。
+
+## modules/use-multi-edit.el（批量多行编辑）
+
+两类互补的批量编辑：`iedit` 管“同一个词到处改”，`occur-edit` 管“每行改的内容不一样”。
+
+| 内容 | 说明 |
+|---|---|
+| `use-package iedit :ensure t` | 从 MELPA 安装；`C-;` 由 iedit 加载时按 `iedit-toggle-key-default` 自动全局绑定，模块里不用再写 `:bind` |
+| `C-;`（`iedit-mode`） | 光标在符号上按一次，该符号所有出现处同步高亮，改一处全部跟着改；有选区时以选区内容为模式。再按一次退出 |
+| `iedit-execute-last-modification` | 记住上一次的批量改名，可在另一个 buffer 里直接重放（适合跨文件改名） |
+| `C-c e`（`my/occur-edit-symbol`） | 以光标处符号做 `occur`（`\_<…\_>` 词边界匹配），弹出 `*Occur*` 并直接进入 `occur-edit-mode`；等价于 `M-x occur` 后按 `e`，少一次窗口切换 |
+| occur-edit 的写回语义 | Emacs 29 起是**实时联动**：在 `*Occur*` 里改一行，源 buffer 立刻同步；`C-c C-c`（`occur-cease-edit`）只是退出编辑态回到普通 `occur-mode`，再按 `e` 可回去继续 |
+| 限制 | occur 条目不能新增（插入换行会被丢弃）；源 buffer 只读时只在回显区提示、不会修改；`occur` 复用同一个 `*Occur*` buffer |
+
+两者都不依赖 overlay 堆叠，比 multiple-cursors 在 `flycheck` / `company` 场景下更稳。
+列/矩形编辑仍走内置的 `C-x SPC` + `C-x r t`，按行套用同一操作走 `C-x C-k r`（`apply-macro-to-region-lines`），都不需要装包。
 
 ## keybindings.el（个人快捷键）
 
