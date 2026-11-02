@@ -41,8 +41,9 @@
          ("M-g g" . consult-goto-line)
          ("M-g m" . consult-mark)
          ("M-g i" . consult-imenu)
-         ;; C-s 保留给 isearch: docs/multi-edit.md 里的 "C-s → C-c s" 依赖它
-         ("M-s l" . consult-line)
+         ;; C-s 交给 consult-line; isearch 用 C-M-s / C-r 进入,
+         ;; docs/multi-edit.md 的 "isearch → C-c s" 流程仍可走
+         ("C-s" . consult-line)
          ("M-s r" . consult-ripgrep)    ; 需要 ripgrep(rg)
          :map minibuffer-local-map
          ("M-r" . consult-history)))

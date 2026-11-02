@@ -250,7 +250,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 |---|---|
 | `use-package iedit :ensure t` | 从 MELPA 安装；`iedit-toggle-key-default` 置 `nil` 关掉自带的自动绑定（它会把同一个键同时绑进 global / isearch / esc / help，`C-c .` 落在 `M-C-c`、`C-h C-c` 上会撞车），改由模块自己绑 |
 | `C-c s`（`iedit-mode`） | 光标在符号上按一次，该符号所有出现处同步高亮，改一处全部跟着改；有选区时以选区内容为模式。再按一次退出 |
-| `C-c s`（isearch 中） | 在 `C-s` / `C-M-s` 搜索后直接按 `C-c s`，以当前搜索串进入 iedit，可批量改正则匹配；也绕开了 `thing-at-point` 的词边界（`sh-mode` 这类 `.` 算符号的模式里，光标取词会连 `.x` 一起带上，本路径不受影响） |
+| `C-c s`（isearch 中） | 在 `C-M-s` / `C-r` 搜索后直接按 `C-c s`，以当前搜索串进入 iedit，可批量改正则匹配；也绕开了 `thing-at-point` 的词边界（`sh-mode` 这类 `.` 算符号的模式里，光标取词会连 `.x` 一起带上，本路径不受影响） |
 | `M-C-c` / `C-h C-c` | 不绑定：`esc-map` 上 `M-C-c` 是 `exit-recursive-edit`、`help-map` 上 `C-h C-c` 是 `describe-copying`；重放上次改名用 `M-x iedit-execute-last-modification` |
 | 键位选择 | `C-c s` 在 `c-mode` / `c++-mode` / `org-mode` / `sh-mode` / `emacs-lisp-mode` 里都未被占用（已实测），不需要再按 mode 覆盖 |
 | `iedit-execute-last-modification` | 记住上一次的批量改名，可在另一个 buffer 里直接重放（适合跨文件改名） |
@@ -272,14 +272,14 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `vertico` | 竖直候选列表，`vertico-count 13`、`vertico-cycle t`；`C-x` 前缀下用 `vertico-directory-*` 处理目录名（DEL 整段删目录、`M-DEL` 删一段词） |
 | `orderless` | 匹配引擎：空格分隔、任意顺序，`"conf init"` 可匹配 `init-config.el`；文件类补全改用 `basic partial-completion`，因为路径上用 orderless 会乱 |
 | `marginalia` | 候选右侧旁注：`M-x` 显示命令简介，文件名显示大小/权限 |
-| `consult` | `C-x b` 缓冲/书签/最近文件、`M-s l` 行内搜索、`M-s r` ripgrep、`M-y` kill-ring 预览、`M-g g/m/i` 行号/标记/imenu |
+| `consult` | `C-x b` 缓冲/书签/最近文件、`C-s` 行内搜索、`M-s r` ripgrep、`M-y` kill-ring 预览、`M-g g/m/i` 行号/标记/imenu |
 | `embark` | `C-.` 对当前候选执行动作（复制、删除、重命名、批量标记）；`C-;` 是 `embark-dwim` |
 | `embark-consult` | 让 `embark-collect` 缓冲区支持 consult 的实时预览 |
 
 两点说明：
 
 - **不再启用 fido**：`core/view.el` 里的 `fido-vertical-mode` 已移除，`fido`/`icomplete` 与 vertico 抢同一个 minibuffer，不能共存；`read-extended-command-predicate` 保留。
-- **`C-s` 没有让给 `consult-line`**：`docs/multi-edit.md` 里 `C-s 搜索 → C-c s 进 iedit` 的流程依赖它，所以 `consult-line` 用惯用的 `M-s l`；`M-.` 也留给 `xref-find-definitions`，`embark-dwim` 放到了已释放的 `C-;`。
+- **`C-s` 给了 `consult-line`**：更快的行内搜索；isearch 仍可用 `C-M-s`（正则）或 `C-r`（反向）进入，`docs/multi-edit.md` 里 `搜索 → C-c s 进 iedit` 的流程改从这两个键进。`M-.` 留给 `xref-find-definitions`，`embark-dwim` 放到了已释放的 `C-;`。
 
 `vertico-directory` 是随 vertico 分发的扩展（不在 `vertico.el` 里、也没有 autoload），模块里显式 `(require 'vertico-directory)`，否则按 `DEL` 会报 `void-function`。
 
