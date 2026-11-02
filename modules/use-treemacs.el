@@ -17,14 +17,24 @@
         default-directory)))))
 
 (defun my/treemacs-toggle (&optional arg)
-  "Toggle treemacs; on an empty workspace add the current project root.
+  "Toggle treemacs, making sure the current project is in the workspace.
 The root comes from project.el, so the VC root (e.g. the directory
-containing .git) wins over the current buffer's directory."
+containing .git) wins over the current buffer's directory.  The
+workspace may already contain projects restored from
+`treemacs-persist-file'; in that case the current project is added
+before the tree is shown, instead of just showing the old tree."
   (interactive "P")
   (require 'treemacs)
-  (if (treemacs-workspace->is-empty?)
-      (treemacs-add-and-display-current-project)
-    (treemacs arg)))
+  (let ((root (when-let* ((pr (project-current)))
+                (treemacs-canonical-path (project-root pr)))))
+    (cond
+     ;; 已经显示 → 关掉(前缀参数照旧交给 treemacs 去切 workspace)
+     ((eq (treemacs-current-visibility) 'visible)
+      (treemacs arg))
+     ;; 当前工程还不在 workspace 里 → 加进来并定位过去
+     ((and root (not (treemacs-is-path root :in-workspace)))
+      (treemacs-add-and-display-current-project))
+     (t (treemacs arg)))))
 
 (use-package treemacs
   :ensure t

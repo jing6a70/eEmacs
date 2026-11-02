@@ -194,7 +194,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 | 内容 | 说明 |
 |---|---|
-| `C-c t` | 开关侧栏；空 workspace 时自动加入当前工程（`my/treemacs-toggle`，走 project.el 的 `.git` 根，不弹目录选择） |
+| `C-c t` | 开关侧栏；当前工程不在 workspace 里时，先把它加进去再定位过去（`my/treemacs-toggle`，走 project.el 的 `.git` 根，不弹目录选择）。workspace 已从持久化文件恢复、里面只有旧工程时同样适用 |
 | `C-c T` | `treemacs-add-and-display-current-project`，把当前工程挂进树里（projectile → project.el → 当前目录） |
 | 延迟加载 | `use-package ... :bind`，首次按键才真正加载 treemacs |
 | `treemacs-width 32` | 侧栏宽度 32 列 |
@@ -202,7 +202,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `treemacs-filewatch-mode` | 文件系统变动后自动刷新 |
 | `treemacs-git-mode 'deferred` | git 状态着色；deferred 变体需要 `python3` |
 | 首次打开 | 若仍走到 treemacs 自带的 `Project root:` 提示（例如直接 `M-x treemacs`），默认值取 project.el 工程根而不是当前目录 |
-| 持久化 | 工程列表保存在 `~/.emacs.d/.cache/treemacs-persist`（`.cache/` 已 gitignore） |
+| 持久化 | 工程列表保存在 `~/.emacs.d/.cache/treemacs-persist`（`.cache/` 已 gitignore）。副作用：在新目录里按 `C-c t` 时 workspace 可能已被恢复成旧工程；`my/treemacs-toggle` 会把当前工程补进去。只想保留当前工程可 `(setq treemacs-persist-file nil)` 关掉持久化，或删掉该文件 |
 
 图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
 `(treemacs-load-theme "nerd-icons")`，前提是系统已安装 Nerd Font。
