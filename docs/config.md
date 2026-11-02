@@ -26,7 +26,7 @@
 │   ├── use-undo-tree.el     # 撤销树(undo-tree)
 │   ├── use-hungry-delete.el # 连删空白(hungry-delete)
 │   └── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
-└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / quickstartguide.org)
+└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / quickstartguide.org)
 ```
 
 ## 启动流程
@@ -221,6 +221,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 `C-/`（undo）、`M-_`（redo）、`C-x u`（可视化界面，在分支间切换）由 undo-tree 接管。
 想跨会话保存撤销历史，把 `undo-tree-auto-save-history` 设回 `t`，并给 `.gitignore` 补 `.*.~undo-tree~`（或用 `undo-tree-history-directory-alist` 集中存放）。
+
+可视化界面的按键、`q` 与 `C-q` 的区别、容量设置的完整说明见 [undo-tree.md](undo-tree.md)。
 
 ## modules/use-hungry-delete.el（连删空白）
 
