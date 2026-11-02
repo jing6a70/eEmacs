@@ -245,10 +245,10 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | 内容 | 说明 |
 |---|---|
 | `use-package iedit :ensure t` | 从 MELPA 安装；`iedit-toggle-key-default` 置 `nil` 关掉自带的自动绑定（它会把同一个键同时绑进 global / isearch / esc / help，`C-c .` 落在 `M-C-c`、`C-h C-c` 上会撞车），改由模块自己绑 |
-| `C-c .`（`iedit-mode`） | 光标在符号上按一次，该符号所有出现处同步高亮，改一处全部跟着改；有选区时以选区内容为模式。再按一次退出 |
-| `C-c .`（isearch 中） | 在 `C-M-s` 正则搜索里直接按 `C-c .`，以当前搜索串进入 iedit，可批量改正则匹配 |
+| `C-c s`（`iedit-mode`） | 光标在符号上按一次，该符号所有出现处同步高亮，改一处全部跟着改；有选区时以选区内容为模式。再按一次退出 |
+| `C-c s`（isearch 中） | 在 `C-s` / `C-M-s` 搜索后直接按 `C-c s`，以当前搜索串进入 iedit，可批量改正则匹配；也绕开了 `thing-at-point` 的词边界（`sh-mode` 这类 `.` 算符号的模式里，光标取词会连 `.x` 一起带上，本路径不受影响） |
 | `M-C-c` / `C-h C-c` | 不绑定：`esc-map` 上 `M-C-c` 是 `exit-recursive-edit`、`help-map` 上 `C-h C-c` 是 `describe-copying`；重放上次改名用 `M-x iedit-execute-last-modification` |
-| C/C++ 里的覆盖 | `c-mode` / `c++-mode` 中 `C-c .` 原本是 `c-set-style`，会盖住全局绑定，模块用 `c-mode-base-map` 把它改指向 `iedit-mode`（`c-set-style` 仍可 `M-x` 调用） |
+| 键位选择 | `C-c s` 在 `c-mode` / `c++-mode` / `org-mode` / `sh-mode` / `emacs-lisp-mode` 里都未被占用（已实测），不需要再按 mode 覆盖 |
 | `iedit-execute-last-modification` | 记住上一次的批量改名，可在另一个 buffer 里直接重放（适合跨文件改名） |
 | `C-c e`（`my/occur-edit-symbol`） | 以光标处符号做 `occur`（`\_<…\_>` 词边界匹配），弹出 `*Occur*` 并直接进入 `occur-edit-mode`；等价于 `M-x occur` 后按 `e`，少一次窗口切换 |
 | occur-edit 的写回语义 | Emacs 29 起是**实时联动**：在 `*Occur*` 里改一行，源 buffer 立刻同步；`C-c C-c`（`occur-cease-edit`）只是退出编辑态回到普通 `occur-mode`，再按 `e` 可回去继续 |
@@ -257,8 +257,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 两者都不依赖 overlay 堆叠，比 multiple-cursors 在 `flycheck` / `company` 场景下更稳。
 列/矩形编辑仍走内置的 `C-x SPC` + `C-x r t`，按行套用同一操作走 `C-x C-k r`（`apply-macro-to-region-lines`），都不需要装包。
 
-按键冲突提醒：`org-mode` 里 `C-c .` 是 `org-time-stamp`，**没有**覆盖（会盖住全局绑定），org buffer 里想用 iedit 走 `M-x iedit-mode` 或改用 `C-c e`。
-`C-;` 这个位置已经释放，不再占用。
+按键冲突提醒：`C-c .` 在 `c-mode` 里是 `c-set-style`、在 `org-mode` 里是 `org-time-stamp`，正因为这个才换成了 `C-c s`（实测各模式均空闲）。`C-;` 也早已释放。
 
 ## keybindings.el（个人快捷键）
 
