@@ -26,7 +26,7 @@
 │   ├── use-undo-tree.el     # 撤销树(undo-tree)
 │   ├── use-hungry-delete.el # 连删空白(hungry-delete)
 │   └── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
-└── docs/                    # 文档(config.md / project.md / debug.md / magit.md / quickstartguide.org)
+└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / quickstartguide.org)
 ```
 
 ## 启动流程
@@ -258,6 +258,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 列/矩形编辑仍走内置的 `C-x SPC` + `C-x r t`，按行套用同一操作走 `C-x C-k r`（`apply-macro-to-region-lines`），都不需要装包。
 
 按键冲突提醒：`C-c .` 在 `c-mode` 里是 `c-set-style`、在 `org-mode` 里是 `org-time-stamp`，正因为这个才换成了 `C-c s`（实测各模式均空闲）。`C-;` 也早已释放。
+
+完整的用法、范围控制与常见坑见 [multi-edit.md](multi-edit.md)。
 
 ## keybindings.el（个人快捷键）
 
