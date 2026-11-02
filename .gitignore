@@ -30,3 +30,4 @@ forge-database.sqlite*
 transient/
 
 .cache/
+.lsp-session-v1
