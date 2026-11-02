@@ -27,10 +27,9 @@
 ;; 保存 minibuffer 历史
 (savehist-mode 1)
 
-;; 加大撤销历史
-(setq undo-limit 800000
-      undo-strong-limit 1200000
-      undo-outer-limit 48000000)
+;; 撤销容量交给 undo-tree 管: undo-tree-mode 会把 buffer-local 的 undo-limit
+;; 顶到 undo-tree-limit(默认 80M), 在这里设 undo-limit 之类不会生效.
+;; 要调容量改 modules/use-undo-tree.el 里的 undo-tree-limit 等变量.
 
 ;; 删除文件移入系统回收站,避免误删
 (setq delete-by-moving-to-trash t)

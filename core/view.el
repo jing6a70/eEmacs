@@ -3,10 +3,8 @@
 
 ;;; Code:
 
-;; 关闭菜单栏,工具栏,滚动条,启动欢迎页 | *scratch* 留空
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+;; 启动欢迎页关闭 | *scratch* 留空
+;; (菜单栏/工具栏/滚动条在 early-init.el 里已经关掉, 这里不再重复)
 (setq inhibit-splash-screen t)
 (setq initial-scratch-message nil)
 

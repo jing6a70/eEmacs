@@ -8,3 +8,6 @@
 - dape 调试：[docs/debug.md](docs/debug.md)
 - 批量编辑：[docs/multi-edit.md](docs/multi-edit.md)
 - 撤销树：[docs/undo-tree.md](docs/undo-tree.md)
+- 行内补全：[docs/corfu.md](docs/corfu.md)
+- 代码片段：[docs/yasnippet.md](docs/yasnippet.md)
+- LSP：[docs/lsp.md](docs/lsp.md)

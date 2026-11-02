@@ -38,7 +38,7 @@
 │   ├── use-corfu.el         # 行内补全(corfu + cape)
 │   ├── use-yasnippet.el     # 代码片段(yasnippet)
 │   └── use-lspmode.el       # LSP 通用配置(lsp-mode/lsp-ui/lsp-treemacs)
-└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / quickstartguide.org)
+└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / corfu.md / yasnippet.md / lsp.md / quickstartguide.org)
 ```
 
 ## 启动流程
@@ -307,6 +307,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | 作用范围 | 以上后备只挂在 `prog-mode` / `text-mode` / `org-mode` 里 |
 | TAB | 没有改 `tab-always-indent`：TAB 仍是缩进，弹窗靠 `corfu-auto` 自动弹出 |
 
+完整说明见 [corfu.md](corfu.md)。
+
 ## modules/use-yasnippet.el（代码片段）
 
 | 内容 | 说明 |
@@ -316,6 +318,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `yasnippet-snippets` | 现成片段库（C/C++/Python/JS 等），加载时自动挂进 `yas-snippet-dirs` |
 | `:demand t` | 必须写：`:bind` 会把包推迟到首次按键，那样 `yas-global-mode` 启动时根本不会执行 |
 | `yas-global-mode` | 全局开启；没把 TAB 给 `yas-expand`，避免和缩进/corfu 抢键 |
+
+片段目录结构、字段跳转键与自定义写法见 [yasnippet.md](yasnippet.md)。
 
 ## modules/use-lspmode.el（LSP 通用配置）
 
@@ -329,6 +333,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | 语言文件共用 | `my/add-exec-path`（往 `exec-path`/$PATH 前插用户 bin 目录）、`my/lsp-deferred-with-server`（server 不在 PATH 时只报警告，不阻断） |
 
 各语言的 mode hook 与 server 参数不放在这里，由语言文件（如 `e-clang-mode.el`）调用 `my/lsp-deferred-with-server`。
+
+完整说明见 [lsp.md](lsp.md)。
 
 ## keybindings.el（个人快捷键）
 
