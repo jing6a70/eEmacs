@@ -1,7 +1,15 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入十四个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`、`hungry-delete`、`iedit`、`vertico`、`orderless`、`marginalia`、`consult`、`embark`、`embark-consult`
-（`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入第三方包，按用途分：
+
+- 编辑：`magit`、`diff-hl`、`undo-tree`、`hungry-delete`、`iedit`
+- 界面：`dashboard`、`treemacs`
+- 补全：`vertico`、`orderless`、`marginalia`、`consult`、`embark`、`embark-consult`、`corfu`、`cape`
+- 片段：`yasnippet`、`yasnippet-snippets`、`yasnippet-capf`
+- 调试：`dape`
+- LSP：`lsp-mode`、`lsp-ui`、`lsp-treemacs`、`consult-lsp`、`which-key`
+
+（`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装。）
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
 
@@ -26,7 +34,10 @@
 │   ├── use-undo-tree.el     # 撤销树(undo-tree)
 │   ├── use-hungry-delete.el # 连删空白(hungry-delete)
 │   ├── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
-│   └── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
+│   ├── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
+│   ├── use-corfu.el         # 行内补全(corfu + cape)
+│   ├── use-yasnippet.el     # 代码片段(yasnippet)
+│   └── use-lspmode.el       # LSP 通用配置(lsp-mode/lsp-ui/lsp-treemacs)
 └── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / quickstartguide.org)
 ```
 
@@ -49,6 +60,9 @@ early-init.el
        ├─ modules/use-hungry-delete.el
        ├─ modules/use-multi-edit.el
        ├─ modules/use-vertico.el
+       ├─ modules/use-corfu.el
+       ├─ modules/use-yasnippet.el
+       ├─ modules/use-lspmode.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -70,7 +84,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico use-yasnippet use-corfu use-lspmode)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -282,6 +296,39 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 - **`C-s` 给了 `consult-line`**：更快的行内搜索；isearch 仍可用 `C-M-s`（正则）或 `C-r`（反向）进入，`docs/multi-edit.md` 里 `搜索 → C-c s 进 iedit` 的流程改从这两个键进。`M-.` 留给 `xref-find-definitions`，`embark-dwim` 放到了已释放的 `C-;`。
 
 `vertico-directory` 是随 vertico 分发的扩展（不在 `vertico.el` 里、也没有 autoload），模块里显式 `(require 'vertico-directory)`，否则按 `DEL` 会报 `void-function`。
+
+## modules/use-corfu.el（行内补全）
+
+| 内容 | 说明 |
+|---|---|
+| `corfu` | 缓冲区内补全弹窗；`corfu-auto t`、`corfu-auto-delay 0.3`、`corfu-auto-prefix 2`（设 1 会在每个字符上都打一次 LSP 请求）、`corfu-cycle t`，并开 `corfu-popupinfo-mode` |
+| `cape` | LSP 之外的后备候选：`cape-file`(80) 补路径、`cape-dabbrev`(90) 补词；按 CAPF 深度排在 LSP（0）之后 |
+| `yasnippet-capf` | 片段候选（50）。**cape 没有 yasnippet 后端**，不要写 `cape-yasnippet` |
+| 作用范围 | 以上后备只挂在 `prog-mode` / `text-mode` / `org-mode` 里 |
+| TAB | 没有改 `tab-always-indent`：TAB 仍是缩进，弹窗靠 `corfu-auto` 自动弹出 |
+
+## modules/use-yasnippet.el（代码片段）
+
+| 内容 | 说明 |
+|---|---|
+| `C-c y` | `yas-insert-snippet`，用 vertico + orderless 按名字挑片段 |
+| `yas-snippet-dirs` | 默认值本来就是 `~/.emacs.d/snippets/`，模块只负责把目录建出来，不重复追加 |
+| `yasnippet-snippets` | 现成片段库（C/C++/Python/JS 等），加载时自动挂进 `yas-snippet-dirs` |
+| `:demand t` | 必须写：`:bind` 会把包推迟到首次按键，那样 `yas-global-mode` 启动时根本不会执行 |
+| `yas-global-mode` | 全局开启；没把 TAB 给 `yas-expand`，避免和缩进/corfu 抢键 |
+
+## modules/use-lspmode.el（LSP 通用配置）
+
+| 内容 | 说明 |
+|---|---|
+| `lsp-mode` | `:commands (lsp lsp-deferred)`；`lsp-completion-provider :capf`（给 corfu）、`lsp-diagnostics-provider :flymake`、`lsp-enable-snippet t`（由 yasnippet 展开服务端片段）、`read-process-output-max` 1MB |
+| `which-key` | `lsp-enable-which-key-integration` 依赖它；Emacs 29 未内置（30 才内置），所以显式安装并 `which-key-mode` |
+| `lsp-ui` | doc 用 childframe（仅 GUI）、sideline 显示 hover/actions/diagnostics、headerline 面包屑 |
+| `C-c l s` / `C-c l i` / `C-c l d` | `lsp-treemacs-symbols` / `lsp-ui-imenu` / `consult-lsp-diagnostics`；`M-9` 是 `lsp-treemacs-errors-list`。**`C-c s` 仍是 iedit，不要占用** |
+| 自动弹符号面板 | `lsp-after-initialize-hook` 触发，用 `my/lsp-auto-symbols-p` 开关控制；请求走 `lsp-request-async`（同步会卡 UI），clangd 冷启动时最多重试 3 次 |
+| 语言文件共用 | `my/add-exec-path`（往 `exec-path`/$PATH 前插用户 bin 目录）、`my/lsp-deferred-with-server`（server 不在 PATH 时只报警告，不阻断） |
+
+各语言的 mode hook 与 server 参数不放在这里，由语言文件（如 `e-clang-mode.el`）调用 `my/lsp-deferred-with-server`。
 
 ## keybindings.el（个人快捷键）
 
