@@ -37,7 +37,8 @@
 │   ├── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
 │   ├── use-corfu.el         # 行内补全(corfu + cape)
 │   ├── use-yasnippet.el     # 代码片段(yasnippet)
-│   └── use-lspmode.el       # LSP 通用配置(lsp-mode/lsp-ui/lsp-treemacs)
+│   ├── use-lspmode.el       # LSP 通用配置(lsp-mode/lsp-ui/lsp-treemacs)
+│   └── use-clangd.el        # C/C++ 的 LSP(clangd)
 └── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / corfu.md / yasnippet.md / lsp.md / quickstartguide.org)
 ```
 
@@ -63,6 +64,7 @@ early-init.el
        ├─ modules/use-corfu.el
        ├─ modules/use-yasnippet.el
        ├─ modules/use-lspmode.el
+       ├─ modules/use-clangd.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -84,7 +86,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico use-yasnippet use-corfu use-lspmode)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico use-yasnippet use-corfu use-lspmode use-clangd)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -335,6 +337,15 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 各语言的 mode hook 与 server 参数不放在这里，由语言文件（如 `e-clang-mode.el`）调用 `my/lsp-deferred-with-server`。
 
 完整说明见 [lsp.md](lsp.md)。
+
+## modules/use-clangd.el（C/C++ 的 LSP）
+
+| 内容 | 说明 |
+|---|---|
+| 启动时机 | `c-mode-hook` / `c++-mode-hook` / `objc-mode-hook` 里调 `my/lsp-deferred-with-server`，clangd 存在才启动 |
+| 签名提示 | lsp-mode 的 `lsp-signature-auto-activate` 默认在 `(` 和 `,` 触发，显示在 **echo area（eldoc）**；`corfu` 弹窗里只显示候选与文档摘要，不显示调用签名 |
+| clangd 缺失 | 只在 `*Warnings*` 里留一条记录，不阻断打开文件 |
+| 工程根 | 靠 `lsp-auto-guess-root`，优先 `.git` / `compile_commands.json`；找不到时 `M-x lsp-workspace-restart` 前先建一个 |
 
 ## keybindings.el（个人快捷键）
 

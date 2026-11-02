@@ -64,14 +64,15 @@ lsp-after-initialize-hook
 
 ## 5. 接入一个新语言
 
-以 clangd 为例，在语言文件里：
+C/C++ 已经由 `modules/use-clangd.el` 接好（`c-mode` / `c++-mode` / `objc-mode`），clangd 装在 `PATH` 里就会自动启动。
+
+其它语言照同样的模式，在各自的语言文件里写：
 
 ```elisp
-(use-package cc-mode
-  :ensure nil
-  :hook
-  (c-mode   . (lambda () (my/lsp-deferred-with-server "clangd" "apt install clangd")))
-  (c++-mode . (lambda () (my/lsp-deferred-with-server "clangd" "apt install clangd"))))
+(defun my/gopls-start ()
+  (my/lsp-deferred-with-server "gopls" "安装: go install golang.org/x/tools/gopls@latest"))
+
+(add-hook 'go-mode-hook #'my/gopls-start)
 ```
 
 `my/lsp-deferred-with-server` 的行为：server 在 PATH 里就 `lsp-deferred`，否则在 `*Warnings*` 里留一条带安装提示的记录，不报错、不阻断。
@@ -86,7 +87,8 @@ server 装在用户目录（`~/go/bin`、`~/.local/npm-global/bin`）时，用 `
 
 | 现象 | 原因 / 解决 |
 | --- | --- |
-| 打开文件没反应 | 该语言的文件里没把 `lsp-deferred` 挂到 mode hook；或 server 不在 PATH（看 `*Warnings*`） |
+| 打开文件没反应 | 该语言没把 `lsp-deferred` 挂到 mode hook（C/C++ 由 `use-clangd.el` 负责）；或 server 不在 PATH（看 `*Warnings*`） |
+| 补全时不显示参数 | 参数/签名走 **eldoc（echo area）**，由 `lsp-signature-auto-activate` 在输入 `(` `,` 时触发；corfu 弹窗只显示候选与文档摘要。先确认 `C-c l s` 能列出符号，说明 LSP 已连上 |
 | `which-key` 相关报错 | 没装 which-key（Emacs 29 不内置）；本配置已 `:ensure t` |
 | 补全里没有 LSP 候选 | `lsp-completion-provider` 被改成 `:none` 了 |
 | `C-c l s` 之类按不出来 | 你改过 `lsp-keymap-prefix` 成 `C-c l`，把我们的前缀 map 覆盖了；改成 `s-l` 或 `C-c L` |
