@@ -183,7 +183,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 |---|---|
 | `use-package dashboard :ensure t` | 从 MELPA 安装，启动时显示欢迎页 |
 | `dashboard-items` | 最近工程 10 / 最近文件 5 / 书签 3 |
-| `dashboard-projects-backend 'project-el` | 工程列表复用 project.el 的 `project-list-file`，与 `C-x p p` 共用同一份历史 |
+| `dashboard-projects-backend 'project-el` | 工程列表复用 project.el 的 `project-list-file`（`~/.emacs.d/projects`），与 `C-x p p`、treemacs 的 `C-c t` / `C-c T` 共用同一份历史；也可 `M-x project-remember-projects-under` 批量登记 |
 | `dashboard-startup-banner 'logo`、`dashboard-center-content t` | 显示 Emacs logo，内容居中 |
 | `dashboard-setup-startup-hook` | 仅在**不带文件参数**启动时生效（`emacs foo.c` 不会显示欢迎页） |
 
@@ -194,15 +194,15 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 | 内容 | 说明 |
 |---|---|
-| `C-c t` | 开关侧栏；当前工程不在 workspace 里时，先把它加进去再定位过去（`my/treemacs-toggle`，走 project.el 的 `.git` 根，不弹目录选择）。workspace 已从持久化文件恢复、里面只有旧工程时同样适用 |
-| `C-c T` | `treemacs-add-and-display-current-project`，把当前工程挂进树里（projectile → project.el → 当前目录） |
+| `C-c t` | 开关侧栏；当前工程不在 workspace 里时，先登记进 project.el 再加进树并定位过去（`my/treemacs-toggle`，走 project.el 的 `.git` 根，不弹目录选择） |
+| `C-c T` | `my/treemacs-add-current-project`：先把当前工程登记进 project.el，再 `treemacs-add-and-display-current-project`（projectile → project.el → 当前目录） |
 | 延迟加载 | `use-package ... :bind`，首次按键才真正加载 treemacs |
 | `treemacs-width 32` | 侧栏宽度 32 列 |
 | `treemacs-follow-mode` | 光标移动时在树中定位当前文件 |
 | `treemacs-filewatch-mode` | 文件系统变动后自动刷新 |
 | `treemacs-git-mode 'deferred` | git 状态着色；deferred 变体需要 `python3` |
 | 首次打开 | 若仍走到 treemacs 自带的 `Project root:` 提示（例如直接 `M-x treemacs`），默认值取 project.el 工程根而不是当前目录 |
-| 持久化 | 工程列表保存在 `~/.emacs.d/.cache/treemacs-persist`（`.cache/` 已 gitignore）。副作用：在新目录里按 `C-c t` 时 workspace 可能已被恢复成旧工程；`my/treemacs-toggle` 会把当前工程补进去。只想保留当前工程可 `(setq treemacs-persist-file nil)` 关掉持久化，或删掉该文件 |
+| 工程清单 | **以 project.el 为唯一来源**，treemacs 只做展示：`treemacs-persist-file` 设为 `nil` 关闭自带持久化；打开侧栏时 `treemacs-post-buffer-init-hook` 把 `project-known-project-roots` 里还没有的工程补进 workspace；dashboard 的 Projects 块读的也是这份列表 |
 
 图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
 `(treemacs-load-theme "nerd-icons")`，前提是系统已安装 Nerd Font。
