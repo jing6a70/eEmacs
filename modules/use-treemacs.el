@@ -7,21 +7,9 @@
 
 (require 'project)
 
-;; 关掉 treemacs 自己的 workspace 持久化, 免得和 project.el 的列表各自演化.
-(setq treemacs-persist-file nil)
-
-;; treemacs 首次打开(空 workspace)默认会弹 "Project root:" 让选目录, 默认值
-;; 是当前目录, 在 src/ 里回车就会把子目录当成工程. 这里改成默认取 project.el
-;; 的工程根(优先 .git 等版本控制根), 不在工程里时再用当前目录.
-(defun my/treemacs--read-first-project-path ()
-  "Read the first project, defaulting to the current project root."
-  (when (treemacs-workspace->is-empty?)
-    (file-truename
-     (read-directory-name
-      "Project root: "
-      (if-let* ((pr (project-current)))
-          (project-root pr)
-        default-directory)))))
+;; treemacs 首次打开且 workspace 为空时会弹 "Project root:" 提示(默认当前目录).
+;; 这条路径只在"不在任何工程里"时才走得到, 此时 project.el 也取不到根, 回调默认值
+;; 同样是当前目录, 所以不再单独 advice 它.
 
 (defun my/treemacs-remember-current-project ()
   "Register the current buffer's project with project.el."
@@ -64,6 +52,9 @@ containing .git) wins over the current buffer's directory."
 
 (use-package treemacs
   :ensure t
+  :init
+  ;; 工程列表统一由 project.el 保存, treemacs 不再自己持久化
+  (setq treemacs-persist-file nil)
   :bind (("C-c t" . my/treemacs-toggle)
          ("C-c T" . my/treemacs-add-current-project))
   :config
@@ -71,9 +62,7 @@ containing .git) wins over the current buffer's directory."
   (treemacs-follow-mode t)        ; 光标所在文件自动定位
   (treemacs-filewatch-mode t)     ; 文件变动自动刷新
   (treemacs-git-mode 'deferred)   ; git 状态着色(需要 python3)
-  (add-hook 'treemacs-post-buffer-init-hook #'my/treemacs-sync-project-el)
-  (advice-add 'treemacs--read-first-project-path
-              :override #'my/treemacs--read-first-project-path))
+  (add-hook 'treemacs-post-buffer-init-hook #'my/treemacs-sync-project-el))
 
 (provide 'use-treemacs)
 ;;; use-treemacs.el ends here

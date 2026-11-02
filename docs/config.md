@@ -201,7 +201,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `treemacs-follow-mode` | 光标移动时在树中定位当前文件 |
 | `treemacs-filewatch-mode` | 文件系统变动后自动刷新 |
 | `treemacs-git-mode 'deferred` | git 状态着色；deferred 变体需要 `python3` |
-| 首次打开 | 若仍走到 treemacs 自带的 `Project root:` 提示（例如直接 `M-x treemacs`），默认值取 project.el 工程根而不是当前目录 |
+| 首次打开 | 只有直接 `M-x treemacs`（空 workspace）才会弹 `Project root:`，默认值是当前目录；`C-c t` / `C-c T` 走的是「先取 project.el 工程根再加树」，不会遇到这个提示，因此**不再**对 `treemacs--read-first-project-path` 做 advice |
 | 工程清单 | **以 project.el 为唯一来源**，treemacs 只做展示：`treemacs-persist-file` 设为 `nil` 关闭自带持久化；打开侧栏时 `treemacs-post-buffer-init-hook` 把 `project-known-project-roots` 里还没有的工程补进 workspace；dashboard 的 Projects 块读的也是这份列表 |
 
 图标默认为内置简易图标；想要 VS Code 那种文件类型图标，可安装 `treemacs-nerd-icons` 并执行
