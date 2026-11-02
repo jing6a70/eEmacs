@@ -30,7 +30,7 @@
 
 ;; 模块加载列表
 (defvar my/local-modules
-  '(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit))
+  '(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico))
 
 (dolist (module my/local-modules)
   (require module nil 'noerror))

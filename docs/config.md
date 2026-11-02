@@ -1,6 +1,6 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入八个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`、`hungry-delete`、`iedit`
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入十四个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`、`hungry-delete`、`iedit`、`vertico`、`orderless`、`marginalia`、`consult`、`embark`、`embark-consult`
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
@@ -25,7 +25,8 @@
 │   ├── use-treemacs.el      # 左侧文件树(treemacs)
 │   ├── use-undo-tree.el     # 撤销树(undo-tree)
 │   ├── use-hungry-delete.el # 连删空白(hungry-delete)
-│   └── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
+│   ├── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
+│   └── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
 └── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / quickstartguide.org)
 ```
 
@@ -47,6 +48,7 @@ early-init.el
        ├─ modules/use-undo-tree.el
        ├─ modules/use-hungry-delete.el
        ├─ modules/use-multi-edit.el
+       ├─ modules/use-vertico.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -68,7 +70,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -94,7 +96,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `use-dialog-box nil` | 禁用 GUI 弹窗，交互走 minibuffer |
 | `global-auto-revert-mode` | 文件被外部修改后自动重载；`auto-revert-avoid-polling t`、`auto-revert-verbose t` |
 | `global-display-line-numbers-mode` | 全局行号（Emacs 26.1+） |
-| `fido-vertical-mode`、`read-extended-command-predicate` | 原生垂直补全；`M-x` 不列内部命令（Emacs 28.1+） |
+| `read-extended-command-predicate` | `M-x` 不列内部命令（Emacs 28.1+）；补全界面本身交给 `modules/use-vertico.el`，这里不再开 fido |
 | `pixel-scroll-precision-mode` | 像素级平滑滚动（Emacs 29.1+） |
 
 ## core/edit.el（编辑行为）
@@ -263,6 +265,24 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 完整的用法、范围控制与常见坑见 [multi-edit.md](multi-edit.md)。
 
+## modules/use-vertico.el（补全框架）
+
+| 内容 | 说明 |
+|---|---|
+| `vertico` | 竖直候选列表，`vertico-count 13`、`vertico-cycle t`；`C-x` 前缀下用 `vertico-directory-*` 处理目录名（DEL 整段删目录、`M-DEL` 删一段词） |
+| `orderless` | 匹配引擎：空格分隔、任意顺序，`"conf init"` 可匹配 `init-config.el`；文件类补全改用 `basic partial-completion`，因为路径上用 orderless 会乱 |
+| `marginalia` | 候选右侧旁注：`M-x` 显示命令简介，文件名显示大小/权限 |
+| `consult` | `C-x b` 缓冲/书签/最近文件、`M-s l` 行内搜索、`M-s r` ripgrep、`M-y` kill-ring 预览、`M-g g/m/i` 行号/标记/imenu |
+| `embark` | `C-.` 对当前候选执行动作（复制、删除、重命名、批量标记）；`C-;` 是 `embark-dwim` |
+| `embark-consult` | 让 `embark-collect` 缓冲区支持 consult 的实时预览 |
+
+两点说明：
+
+- **不再启用 fido**：`core/view.el` 里的 `fido-vertical-mode` 已移除，`fido`/`icomplete` 与 vertico 抢同一个 minibuffer，不能共存；`read-extended-command-predicate` 保留。
+- **`C-s` 没有让给 `consult-line`**：`docs/multi-edit.md` 里 `C-s 搜索 → C-c s 进 iedit` 的流程依赖它，所以 `consult-line` 用惯用的 `M-s l`；`M-.` 也留给 `xref-find-definitions`，`embark-dwim` 放到了已释放的 `C-;`。
+
+`vertico-directory` 是随 vertico 分发的扩展（不在 `vertico.el` 里、也没有 autoload），模块里显式 `(require 'vertico-directory)`，否则按 `DEL` 会报 `void-function`。
+
 ## keybindings.el（个人快捷键）
 
 | 按键 | 功能 |
@@ -276,7 +296,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 |---|---|
 | Emacs < 29 | `core/elpa.el` 显式 `package-initialize`；`core/theme.el` 直接使用 `tsdh-dark` |
 | Emacs ≥ 29 | 依赖默认包激活；优先 `modus-operandi-tinted` |
-| Emacs 28.1+ | `fido-vertical-mode`、`read-extended-command-predicate`、`repeat-mode`、`core/suppress.el` 整体生效 |
+| Emacs 28.1+ | `read-extended-command-predicate`、`repeat-mode`、`core/suppress.el` 整体生效 |
 | Emacs 26.1+ | `global-display-line-numbers-mode` |
 | Emacs 29.1+ | `pixel-scroll-precision-mode` |
 

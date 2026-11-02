@@ -44,9 +44,8 @@
 (when (version<= "26.1" emacs-version)
   (global-display-line-numbers-mode t))
 
-;; 原生垂直补全 | M-x 不列内部命令
+;; M-x 不列内部命令 | 补全界面交给 modules/use-vertico.el, 这里不再开 fido
 (when (version<= "28.1" emacs-version)
-  (fido-vertical-mode 1)
   (setq read-extended-command-predicate
         #'command-completion-default-include-p))
         
