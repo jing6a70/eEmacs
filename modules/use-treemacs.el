@@ -34,7 +34,7 @@
 
 (defun my/treemacs-toggle (&optional arg)
   "Toggle treemacs; add the current project first if it is missing.
-The root comes from project.el (the VC root), not `default-directory'."
+The root comes from project.el (the git repo root), not `default-directory'."
   (interactive "P")
   (require 'treemacs)
   (let ((root (when-let* ((pr (project-current)))

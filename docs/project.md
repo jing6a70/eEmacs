@@ -15,9 +15,8 @@
 | `C-x p f`| `project-find-file`                     | 在当前工程内找文件                                  |
 | 欢迎页    | dashboard 的 Projects 区块, 按 `p`      | 启动页里直接进入工程列表                            |
 
-工程根由 `project.el` 判定: 从当前文件的目录逐级向上找 `.git` / `.hg` / `.svn` 等
-版本控制标记, 找到即仓库根. 所以从 `cproject/src/main.c` 里按 `C-c t`,
-得到的是 `cproject`, 不是 `src`.
+工程根由 `project.el` 判定: 从当前文件的目录逐级向上找 `.git` 所在目录, 找到即仓库根.
+所以从 `cproject/src/main.c` 里按 `C-c t`, 得到的是 `cproject`, 不是 `src`.
 
 首次打开且 workspace 为空时, `C-c t` 走 `my/treemacs-toggle` 直接加入当前工程,
 **不会**再弹 `Project root:`; 只有直接 `M-x treemacs` 时才会走到那个提示.
@@ -53,7 +52,7 @@
 
 | 规则              | 说明                                                             |
 | ----------------- | ---------------------------------------------------------------- |
-| 版本控制根        | 向上找 `.git` / `.hg` / `.svn` / `.bzr` 等, 找到即根              |
+| git 根            | 向上找 `.git` 所在目录, 找到即根(本配置只用 git)                 |
 | 额外标记          | `project-vc-extra-root-markers` 里的文件名也可作为根(默认 nil)    |
 | 不在工程内        | `(project-current)` 返回 `nil`                                    |
 
