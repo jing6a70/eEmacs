@@ -21,6 +21,7 @@
         lsp-idle-delay 0.5
         lsp-completion-provider :capf      ; 给 corfu 用的 CAPF, 不要改成 :none
         lsp-diagnostics-provider :flymake  ; Emacs 29 内置 flymake
+        lsp-keymap-prefix "C-c L"          ; 默认 s-l 在 Linux 桌面常被锁屏占用
         read-process-output-max (* 1024 1024)))
 
 (use-package lsp-ui
@@ -48,6 +49,19 @@
 (keymap-set global-map "C-c l s" #'lsp-treemacs-symbols)   ; C-c s 是 iedit, 不能占
 (keymap-set global-map "C-c l i" #'lsp-ui-imenu)
 (keymap-set global-map "C-c l d" #'consult-lsp-diagnostics)
+(keymap-set global-map "C-c l r" #'xref-find-references)
+(keymap-set global-map "C-c l ." #'my/lsp-switch-header)
+
+(defun my/lsp-switch-header ()
+  "Switch between the C/C++ header and its source file.
+Uses clangd's switchSourceHeader when LSP is active, otherwise
+falls back to `ff-find-other-file' (purely filename based)."
+  (interactive)
+  (if (and (bound-and-true-p lsp-mode) (lsp-workspaces))
+      (progn (require 'lsp-clangd)
+             (lsp-clangd-find-other-file))
+    (require 'find-file)
+    (ff-find-other-file)))
 
 (use-package consult-lsp
   :ensure t

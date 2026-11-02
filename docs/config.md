@@ -333,6 +333,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `which-key` | `lsp-enable-which-key-integration` 依赖它；Emacs 29 未内置（30 才内置），所以显式安装并 `which-key-mode` |
 | `lsp-ui` | doc 用 childframe（仅 GUI）、sideline 显示 hover/actions/diagnostics、headerline 面包屑 |
 | `C-c l s` / `C-c l i` / `C-c l d` | `lsp-treemacs-symbols` / `lsp-ui-imenu` / `consult-lsp-diagnostics`；`M-9` 是 `lsp-treemacs-errors-list`。**`C-c s` 仍是 iedit，不要占用** |
+| `C-c l r` / `C-c l .` | `xref-find-references`（找引用）/ `my/lsp-switch-header`（头文件 ↔ 源文件，优先 clangd 的 switchSourceHeader） |
 | 自动弹符号面板 | `lsp-after-initialize-hook` 触发，用 `my/lsp-auto-symbols-p` 开关控制；请求走 `lsp-request-async`（同步会卡 UI），clangd 冷启动时最多重试 3 次 |
 | 语言文件共用 | `my/add-exec-path`（往 `exec-path`/$PATH 前插用户 bin 目录）、`my/lsp-deferred-with-server`（server 不在 PATH 时只报警告，不阻断） |
 

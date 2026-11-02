@@ -26,7 +26,38 @@ e-clang-mode.el             ← 语言: 什么时候启动 clangd、传什么参
 
 lsp-mode 自己还有一套命令，默认前缀是 `s-l`（Super 键，GUI 下可用）：`s-l r` 重命名、`s-l a` code action、`s-l g g` 跳定义等。也可以直接 `M-x lsp-…`。
 
-`which-key` 已装并开启，按 `s-l` 后会列出后续按键（`lsp-enable-which-key-integration` 依赖它；Emacs 29 还没内置 which-key）。
+`lsp-keymap-prefix` 已改成 **`C-c L`**（默认的 `s-l` 在 Linux 桌面上常被“锁屏”快捷键占用）。`which-key` 已装并开启，按 `C-c L` 会列出后续按键。
+
+### 跳转与引用
+
+前提是 clangd 已经接管当前 buffer（`C-c l s` 能列出符号就说明连上了），并且工程里最好有 `compile_commands.json`：
+
+```sh
+cd ~/Desktop/sgc/GreenPulse
+qmake GreenPulse.pro          # qmake 工程先出 Makefile
+bear -- make -j"$(nproc)"     # 生成 compile_commands.json(或 compiledb make)
+```
+
+clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等几秒到几分钟，索引建好后跨文件引用才完整。
+
+| 想做什么 | 键 | 说明 |
+| --- | --- | --- |
+| 跳到定义 | `M-.` 或 `C-c L g g` | xref / lsp 都能用；`M-,` 跳回来 |
+| 跳到声明 | `C-c L g d` | 头文件里的声明 |
+| 跳到实现 | `C-c L g i` | 接口 → 实现 |
+| 跳到类型定义 | `C-c L g t` | |
+| **头文件 ↔ 源文件** | `C-c l .` | 优先用 clangd 的 `switchSourceHeader`；没起 LSP 时退回 `ff-find-other-file`（按文件名配对） |
+| 找函数引用 | `M-?` 或 `C-c l r` 或 `C-c L g r` | 结果在 `*xref*` 里，`RET` 跳、`n`/`p` 上下、`q` 关闭 |
+| 工程内按名字搜符号 | `C-c L g a` | `workspace/symbol`，输入 `Car` 之类的片段即可 |
+| 调用层级 | `C-c L g h` | `lsp-treemacs-call-hierarchy` |
+| 文件内符号 | `C-c l s` / `C-c l i` | 树 / imenu |
+
+几个实用提醒：
+
+- `M-.` 是 xref 的入口，lsp-mode 会把自己注册成 xref 后端，所以不用记 `C-c L g g`；
+- 头文件切换依赖命名约定（`Foo.h` ↔ `Foo.cpp`）；文件不在同一目录时 clangd 的 `switchSourceHeader` 更准，它按索引找；
+- 引用搜不到，八成是索引还没建完或 `compile_commands.json` 缺失（此时 clangd 只能按单文件猜）；
+- `C-c L` 下还有 `s` 重命名、`a` code action、`r` 重命名等，按了之后看 which-key 提示。
 
 ## 3. 关键配置
 
