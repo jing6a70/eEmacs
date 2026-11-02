@@ -43,7 +43,7 @@ The root comes from project.el (the git repo root), not `default-directory'."
      ;; 已经显示 → 关掉(前缀参数照旧交给 treemacs 去切 workspace)
      ((eq (treemacs-current-visibility) 'visible)
       (treemacs arg))
-     ;; 当前工程还不在 workspace 里 → 登记进 project.el, 再加进来并定位过去
+     ;; 当前工程还不在 workspace 里则登记进 project.el, 再加进来并定位过去
      ((and root (not (treemacs-is-path root :in-workspace)))
       (my/treemacs-remember-current-project)
       (treemacs-add-and-display-current-project))
