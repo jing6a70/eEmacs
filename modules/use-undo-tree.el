@@ -4,8 +4,9 @@
 
 (use-package undo-tree
   :ensure t
-  ;; global-undo-tree-mode 是 autoload 的全局 minor mode, 必须在 :init 里调用,
-  ;; 否则要等首次用到 undo-tree 才生效, 之前的撤销仍走内置 undo.
+  ;; global-undo-tree-mode 是 autoload 的全局 minor mode. use-package 在没有
+  ;; :defer / :bind 时本来就启动即 require, 放 :config 同样会执行; 这里放 :init
+  ;; 只是让撤销树更早接管, 不依赖加载时机.
   :init (global-undo-tree-mode 1)
   :custom
   ;; 该变量默认是 t: 每次保存文件都会在文件旁生成 .<文件名>.~undo-tree~.

@@ -1,6 +1,6 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入六个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入七个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`、`hungry-delete`
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
@@ -23,7 +23,8 @@
 │   ├── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
 │   ├── use-dashboard.el     # 启动欢迎页(dashboard)
 │   ├── use-treemacs.el      # 左侧文件树(treemacs)
-│   └── use-undo-tree.el     # 撤销树(undo-tree)
+│   ├── use-undo-tree.el     # 撤销树(undo-tree)
+│   └── use-hungry-delete.el # 连删空白(hungry-delete)
 └── docs/                    # 文档(config.md / project.md / debug.md / magit.md / quickstartguide.org)
 ```
 
@@ -43,6 +44,7 @@ early-init.el
        ├─ modules/use-dashboard.el
        ├─ modules/use-treemacs.el
        ├─ modules/use-undo-tree.el
+       ├─ modules/use-hungry-delete.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -64,7 +66,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -210,13 +212,29 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | 内容 | 说明 |
 |---|---|
 | `use-package undo-tree :ensure t` | 从 MELPA 安装；把线性的 undo 历史组织成树，撤销后继续编辑不会丢掉被撤销的分支 |
-| `:init (global-undo-tree-mode 1)` | 必须写在 `:init`：`global-undo-tree-mode` 是 autoload 的**全局** minor mode，放进 `:config` 会等首次用到 undo-tree 才生效，之前的撤销仍走内置 `undo` |
+| `:init (global-undo-tree-mode 1)` | `global-undo-tree-mode` 是 autoload 的**全局** minor mode；use-package 在没有 `:defer` / `:bind` 时启动即 `require`，写 `:config` 同样会执行，放 `:init` 只是让它更早接管、不依赖加载时机 |
 | `undo-tree-auto-save-history` → `nil` | 该变量**默认为 `t`**，会在每个保存过的文件旁生成 `.文件名.~undo-tree~`；置 nil 后撤销历史只存在于当前会话 |
 | 撤销容量 | `undo-tree-mode` 会按 `undo-tree-limit` / `undo-tree-strong-limit` / `undo-tree-outer-limit`（默认 80M / 120M / 360M）覆盖当前 buffer 的 `undo-limit` 等，因此 `core/edit.el` 里的 `undo-limit 800000` 在开启后基本不再起作用 |
 | 模式行 | lighter 默认为 ` Undo-Tree`，想缩短可加 `(setq undo-tree-mode-lighter " UT")` |
 
 `C-/`（undo）、`M-_`（redo）、`C-x u`（可视化界面，在分支间切换）由 undo-tree 接管。
 想跨会话保存撤销历史，把 `undo-tree-auto-save-history` 设回 `t`，并给 `.gitignore` 补 `.*.~undo-tree~`（或用 `undo-tree-history-directory-alist` 集中存放）。
+
+## modules/use-hungry-delete.el（连删空白）
+
+| 内容 | 说明 |
+|---|---|
+| `use-package hungry-delete :ensure t` | 从 MELPA 安装；把 cc-mode 的 hungry delete 抽成通用 minor mode |
+| `:config (global-hungry-delete-mode 1)` | 全局开启。因为没写 `:defer` / `:bind`，use-package 启动即 `require`，`:config` 必然执行；一旦以后加了 `:defer`，这句得挪到 `:init` |
+| 删除行为 | 光标前/后有连续空白（`hungry-delete-chars-to-skip`，默认空格、Tab、换行、回车、换页）时一次删掉整段，否则退化为删一个字符 |
+| 与选区 | 有选区时优先删/杀选区，与 `core/edit.el` 的 `delete-selection-mode` 兼容；矩形标记时走原生删除 |
+| 跳过的 mode | `hungry-delete-except-modes` 默认 `help-mode` / `calc-mode` / `minibuffer-inactive-mode` |
+| 词间空白 | `hungry-delete-join-reluctantly` 设为 `t` 后，删掉两词之间的空白会保留一个空格，避免把 `foo bar` 粘成 `foobar` |
+| 模式行 | lighter 为 ` h`，几乎不占地方 |
+| 兼容性 | 2021 年的版本，源码用了 27.1 起废弃的 `seq-contains`（只在 `hungry-delete-join-reluctantly` 非 nil 时执行），编译有警告但不影响默认配置 |
+
+按键无需额外绑定：`DEL` / `C-d` 等通过 `[remap delete-backward-char]`、`[remap delete-forward-char]`、
+`[remap delete-char]` 接管，`c-mode` 的 `c-electric-backspace` / `c-electric-delete-forward` 也在其中。
 
 ## keybindings.el（个人快捷键）
 
