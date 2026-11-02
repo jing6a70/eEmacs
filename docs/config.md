@@ -1,6 +1,6 @@
 # 配置说明
 
-本配置以 Emacs 内置功能为主，另用 `use-package` 引入五个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`
+本配置以 Emacs 内置功能为主，另用 `use-package` 引入六个第三方包：`magit`、`diff-hl`、`dape`、`dashboard`、`treemacs`、`undo-tree`
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装）。
 
 当前已在 **GNU Emacs 31.1** 上验证。最低建议 Emacs 29：`modus-operandi-tinted` 主题分支、`pixel-scroll-precision-mode` 都依赖 29+。
@@ -22,7 +22,8 @@
 │   ├── use-magit.el         # magit + diff-hl
 │   ├── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
 │   ├── use-dashboard.el     # 启动欢迎页(dashboard)
-│   └── use-treemacs.el      # 左侧文件树(treemacs)
+│   ├── use-treemacs.el      # 左侧文件树(treemacs)
+│   └── use-undo-tree.el     # 撤销树(undo-tree)
 └── docs/                    # 文档(config.md / project.md / debug.md / magit.md / quickstartguide.org)
 ```
 
@@ -41,6 +42,7 @@ early-init.el
        ├─ modules/use-dape.el
        ├─ modules/use-dashboard.el
        ├─ modules/use-treemacs.el
+       ├─ modules/use-undo-tree.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
 ```
@@ -62,7 +64,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -202,6 +204,19 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 `(treemacs-load-theme "nerd-icons")`，前提是系统已安装 Nerd Font。
 
 工程管理与侧栏的完整操作见 [project.md](project.md)。
+
+## modules/use-undo-tree.el（撤销树）
+
+| 内容 | 说明 |
+|---|---|
+| `use-package undo-tree :ensure t` | 从 MELPA 安装；把线性的 undo 历史组织成树，撤销后继续编辑不会丢掉被撤销的分支 |
+| `:init (global-undo-tree-mode 1)` | 必须写在 `:init`：`global-undo-tree-mode` 是 autoload 的**全局** minor mode，放进 `:config` 会等首次用到 undo-tree 才生效，之前的撤销仍走内置 `undo` |
+| `undo-tree-auto-save-history` → `nil` | 该变量**默认为 `t`**，会在每个保存过的文件旁生成 `.文件名.~undo-tree~`；置 nil 后撤销历史只存在于当前会话 |
+| 撤销容量 | `undo-tree-mode` 会按 `undo-tree-limit` / `undo-tree-strong-limit` / `undo-tree-outer-limit`（默认 80M / 120M / 360M）覆盖当前 buffer 的 `undo-limit` 等，因此 `core/edit.el` 里的 `undo-limit 800000` 在开启后基本不再起作用 |
+| 模式行 | lighter 默认为 ` Undo-Tree`，想缩短可加 `(setq undo-tree-mode-lighter " UT")` |
+
+`C-/`（undo）、`M-_`（redo）、`C-x u`（可视化界面，在分支间切换）由 undo-tree 接管。
+想跨会话保存撤销历史，把 `undo-tree-auto-save-history` 设回 `t`，并给 `.gitignore` 补 `.*.~undo-tree~`（或用 `undo-tree-history-directory-alist` 集中存放）。
 
 ## keybindings.el（个人快捷键）
 
