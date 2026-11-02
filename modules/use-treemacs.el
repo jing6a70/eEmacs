@@ -12,12 +12,12 @@
 ;; 同样是当前目录, 所以不再单独 advice 它.
 
 (defun my/treemacs-remember-current-project ()
-  "Register the current buffer's project with project.el."
+  "Register the current buffer's project in project.el."
   (when-let* ((pr (project-current)))
     (project-remember-project pr)))
 
 (defun my/treemacs-sync-project-el ()
-  "Add every project known to project.el into the treemacs workspace."
+  "Add project.el's known projects to the treemacs workspace."
   (dolist (root (project-known-project-roots))
     (let ((path (treemacs-canonical-path root)))
       (unless (treemacs-is-path path :in-workspace)
@@ -26,7 +26,7 @@
            path (treemacs--filename path)))))))
 
 (defun my/treemacs-add-current-project ()
-  "Add the current project to both project.el and treemacs."
+  "Add the current project to project.el and show it in treemacs."
   (interactive)
   (require 'treemacs)
   (my/treemacs-remember-current-project)
