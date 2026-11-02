@@ -240,14 +240,13 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 ## modules/use-multi-edit.el（批量多行编辑）
 
-两类互补的批量编辑：`iedit` 管“同一个词到处改”，`occur-edit` 管“每行改的内容不一样”。`C-c S` 是 iedit 的“限定当前函数”快捷入口。
+两类互补的批量编辑：`iedit` 管“同一个词到处改”，`occur-edit` 管“每行改的内容不一样”。
 
 | 内容 | 说明 |
 |---|---|
 | `use-package iedit :ensure t` | 从 MELPA 安装；`iedit-toggle-key-default` 置 `nil` 关掉自带的自动绑定（它会把同一个键同时绑进 global / isearch / esc / help，`C-c .` 落在 `M-C-c`、`C-h C-c` 上会撞车），改由模块自己绑 |
 | `C-c s`（`iedit-mode`） | 光标在符号上按一次，该符号所有出现处同步高亮，改一处全部跟着改；有选区时以选区内容为模式。再按一次退出 |
 | `C-c s`（isearch 中） | 在 `C-s` / `C-M-s` 搜索后直接按 `C-c s`，以当前搜索串进入 iedit，可批量改正则匹配；也绕开了 `thing-at-point` 的词边界（`sh-mode` 这类 `.` 算符号的模式里，光标取词会连 `.x` 一起带上，本路径不受影响） |
-| `C-c S`（`my/iedit-defun`） | 一步把 iedit 限定在**当前函数**内：内部先 `(iedit-mode)` 再 `(iedit-restrict-function)`，等价于 `C-c s` 后按 `M-H`，但不依赖 `C-0` 这类数字前缀（部分终端送不出 `C-0`） |
 | `M-C-c` / `C-h C-c` | 不绑定：`esc-map` 上 `M-C-c` 是 `exit-recursive-edit`、`help-map` 上 `C-h C-c` 是 `describe-copying`；重放上次改名用 `M-x iedit-execute-last-modification` |
 | 键位选择 | `C-c s` 在 `c-mode` / `c++-mode` / `org-mode` / `sh-mode` / `emacs-lisp-mode` 里都未被占用（已实测），不需要再按 mode 覆盖 |
 | `iedit-execute-last-modification` | 记住上一次的批量改名，可在另一个 buffer 里直接重放（适合跨文件改名） |
