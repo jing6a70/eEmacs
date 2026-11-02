@@ -33,9 +33,8 @@
   (treemacs-add-and-display-current-project))
 
 (defun my/treemacs-toggle (&optional arg)
-  "Toggle treemacs, making sure the current project is in the workspace.
-The root comes from project.el, so the VC root (e.g. the directory
-containing .git) wins over the current buffer's directory."
+  "Toggle treemacs; add the current project first if it is missing.
+The root comes from project.el (the VC root), not `default-directory'."
   (interactive "P")
   (require 'treemacs)
   (let ((root (when-let* ((pr (project-current)))
