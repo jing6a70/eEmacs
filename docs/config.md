@@ -183,7 +183,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 |---|---|
 | `use-package dashboard :ensure t` | 从 MELPA 安装，启动时显示欢迎页 |
 | `dashboard-items` | 最近工程 10 / 最近文件 5 / 书签 3 |
-| `dashboard-projects-backend 'project-el` | 工程列表复用 project.el 的 `project-list-file`（`~/.emacs.d/projects`），与 `C-x p p`、treemacs 的 `C-c t` / `C-c T` 共用同一份历史；也可 `M-x project-remember-projects-under` 批量登记 |
+| `dashboard-projects-backend 'project-el` | 工程列表复用 project.el 的 `project-list-file`（Emacs ≤30 是 `~/.emacs.d/projects`，31 起改名 `projects.eld`；该文件**已纳入 git**，不再忽略），与 `C-x p p`、treemacs 的 `C-c t` / `C-c T` 共用同一份历史；也可 `M-x project-remember-projects-under` 批量登记 |
 | `dashboard-startup-banner 'logo`、`dashboard-center-content t` | 显示 Emacs logo，内容居中 |
 | `dashboard-setup-startup-hook` | 仅在**不带文件参数**启动时生效（`emacs foo.c` 不会显示欢迎页） |
 
