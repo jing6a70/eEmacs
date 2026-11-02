@@ -3,6 +3,7 @@
 个人 Emacs 配置，加载入口为 `init.el`。
 
 - 配置说明：[docs/config.md](docs/config.md)
+- 新机器初始化：`./initmint.sh`（安装 Fira Code 并校验字体，`--check` 只看不改）
 - 工程与侧栏：[docs/project.md](docs/project.md)
 - magit 用法：[docs/magit.md](docs/magit.md)
 - dape 调试：[docs/debug.md](docs/debug.md)

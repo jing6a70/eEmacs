@@ -17,8 +17,9 @@
 
 ```text
 ~/.emacs.d/
-├── early-init.el            # 最早执行: 关闭 UI、启动期 GC 调优
+├── early-init.el            # 最早执行: 关闭 UI、字体、启动期 GC 调优
 ├── init.el                  # 入口: 目录设定、按序加载 core/modules/keybindings、启动 server
+├── initmint.sh              # 新机器初始化: 安装/校验 Fira Code 字体
 ├── keybindings.el           # 个人快捷键(F2 / C-x C-b)
 ├── core/
 │   ├── elpa.el              # 包源(GNU + MELPA)与 package 初始化
@@ -78,6 +79,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 |---|---|
 | `gc-cons-threshold` → `most-positive-fixnum` | 启动阶段几乎不触发 GC，缩短启动时间；启动完成后恢复为 16MB |
 | `menu-bar-mode` / `tool-bar-mode` / `scroll-bar-mode` 关闭 | 在首个 frame 创建前生效，避免启动时界面闪烁 |
+| 字体 | `set-face-attribute 'default` 指定英文等宽 `Fira Code` 13pt（`130`）；`set-fontset-font` 给 `han` / `cjk-misc` / `bopomofo` 指定 `Noto Sans CJK SC`。字体本身用 `./initmint.sh` 安装（apt `fonts-firacode`，失败则下载 ttf 到 `~/.local/share/fonts`） |
 
 ## init.el（入口）
 
