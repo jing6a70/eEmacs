@@ -53,7 +53,8 @@ modules/use-clangd.el       ← 语言: 什么时候启动 clangd、传什么参
 | `C-c L g i` | `eglot-find-implementation` | 接口 → 实现 |
 | `C-c L g t` | `eglot-find-typeDefinition` | 跳到类型定义 |
 | `C-c L g r` | `xref-find-references` | 找引用 |
-| `C-c L g a` | `xref-find-apropos` | 工程内按名字搜符号（`workspace/symbol`），输入 `Car` 之类片段即可 |
+
+工程内按名字搜符号（`workspace/symbol`）没有放在 `C-c L g` 下，单独用 **`C-c f`**（`xref-find-apropos`，输入 `Car` 之类片段即可）。
 
 ### 查看：`C-c l` 前缀
 
@@ -63,7 +64,7 @@ modules/use-clangd.el       ← 语言: 什么时候启动 clangd、传什么参
 | `C-c l d` | `consult-flymake` | 诊断列表，带预览，`RET` 跳转 |
 | `C-c l i` | `eglot-inlay-hints-mode` | inlay hints 开关（参数名/推导类型） |
 | `C-c l r` | `xref-find-references` | 找引用 |
-| `C-c l .` | `my/eglot-switch-header` | 头文件 ↔ 源文件；clangd 没接管时退回 `ff-find-other-file`（按文件名配对） |
+| `C-c l .` / `F4` | `my/eglot-switch-header` | 头文件 ↔ 源文件；优先 clangd 的 `switchSourceHeader`，没接管时退回 `ff-find-other-file`（按文件名配对）。`F4` 只在 C/C++/ObjC buffer 里生效 |
 | `M-9` | `flymake-show-project-diagnostics` | 工程级错误列表（按文件分组） |
 
 `C-c s` **不要**占用：那是 iedit 的开关（见 [multi-edit.md](multi-edit.md)）。
@@ -159,9 +160,9 @@ clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等�
 | 跳到声明 | `C-c L g d` | 头文件里的声明 |
 | 跳到实现 | `C-c L g i` | 接口 → 实现 |
 | 跳到类型定义 | `C-c L g t` | |
-| 头文件 ↔ 源文件 | `C-c l .` | 优先用 clangd 的 `switchSourceHeader`；没起 LSP 时退回 `ff-find-other-file` |
+| 头文件 ↔ 源文件 | `F4` 或 `C-c l .` | 优先用 clangd 的 `switchSourceHeader`；没起 LSP 时退回 `ff-find-other-file` |
 | 找函数引用 | `M-?` 或 `C-c l r` 或 `C-c L g r` | 结果在 `*xref*` 里，`RET` 跳、`n`/`p` 上下、`q` 关闭 |
-| 工程内按名字搜符号 | `C-c L g a` | `workspace/symbol` |
+| 工程内按名字搜符号 | `C-c f` | `xref-find-apropos`（`workspace/symbol`） |
 | 文件内符号 | `C-c l s` | `consult-imenu` |
 
 几个实用提醒：
@@ -186,6 +187,7 @@ clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等�
 | `defvaralias: Overwriting value of ‘eglot-confirm-server-edits’` | 配置里给 `eglot-confirm-server-*` 赋过值；改用 `refactor-confirmation`，或直接删掉那条 `setq` |
 | 启动时 `Warning (comp): project.el … Buffer-menu-show-internal / customize-dirlocals not known` | project 0.12.0 在 Emacs 29 上引用了 30 才有的符号，是 native-comp 编它的告警（不影响运行）；`core/suppress.el` 已在 29.x 上跳过 project.el 的 JIT native 编译 |
 | `C-x p b` 报 `void-variable Buffer-menu-show-internal` | project 0.12.0 在 Emacs 29 上的上游 bug；`core/compat.el` 已补，若删掉它请保留补丁 |
+| `M-.` 和 `M-,` 看起来都在 .c/.h 之间跳 | 两者不是一回事：`M-.`（`xref-find-definitions`）跳 clangd 认为的定义（声明在头文件、实现在 .cpp 时落点由 clangd 索引决定，可能落在头文件），`M-,`（`xref-go-back`）回到跳转前的位置。按文件名配对切换用 `F4` |
 | `which-key` 相关报错 | 没装 which-key（Emacs 29 不内置）；本配置已 `:ensure t` |
 | 符号/引用是旧代码 | clangd 缓存了 `compile_commands.json`，重新生成后 `C-c L R` 重连 |
 
@@ -194,8 +196,8 @@ clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等�
 ```text
 符号: C-c l s（consult-imenu）       诊断: C-c l d（带预览） / M-9（工程级）
 改名/code action/格式化: C-c L r / C-c L a / C-c L f
-跳转: M-. 定义   C-c L g d 声明   C-c L g i 实现   C-c L g t 类型   M-? 引用   C-c L g a 工程搜符号
-头文件切换: C-c l .        inlay hints: C-c l i
+跳转: M-. 定义   C-c L g d 声明   C-c L g i 实现   C-c L g t 类型   M-? 引用   C-c f 工程搜符号
+头文件切换: F4（或 C-c l .）  inlay hints: C-c l i
 断线重连: C-c L R          通信日志: C-c L e
 接语言: (my/eglot-ensure-with-server "gopls" "安装提示")
 路径: (my/add-exec-path "~/go/bin")
