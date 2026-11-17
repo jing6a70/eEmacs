@@ -15,5 +15,15 @@
 (add-hook 'c++-mode-hook #'my/clangd-start)
 (add-hook 'objc-mode-hook #'my/clangd-start)
 
+;; 显式打开 clangd 的后台索引: 打开项目里的一个文件后, clangd 会用
+;; compile_commands.json 建全工程索引(默认写到 ~/.cache/clangd/index),
+;; 这样 F4 头/源切换、M-.、C-c f 引用在目标文件没打开时也能工作.
+;; 用 eglot-alternatives 保留 ccls 作为 clangd 不存在时的备选.
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               (cons '(c-mode c-ts-mode c++-mode c++-ts-mode objc-mode)
+                     (eglot-alternatives '(("clangd" "--background-index")
+                                          "ccls")))))
+
 (provide 'use-clangd)
 ;;; use-clangd.el ends here

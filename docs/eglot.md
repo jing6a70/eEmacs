@@ -162,6 +162,12 @@ bear -- make -j"$(nproc)"     # 生成 compile_commands.json（或 compiledb mak
 ```
 
 clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等几秒到几分钟，索引建好后跨文件引用才完整。
+`use-clangd.el` 里给 clangd 显式加了 `--background-index`，它按 `compile_commands.json` 建的是**工程级**索引：
+`M-.` / `C-c f` / `C-c L g a` / `F4` 都能跳到**没打开过**的文件。
+
+但**补全**（corfu 弹窗）仍然是 **per-buffer** 的：Eglot 只在你打开的那个 buffer 里附着 clangd，
+不存在"打开项目就把所有文件都加载/补全"这回事。也就是说：项目一开，clangd 后台把索引建好，
+跳转立刻可用；补全则要等你打开那个文件（第一次打开时会复用同一个 clangd，不会重复启动）。
 
 | 想做什么 | 键 | 说明 |
 | --- | --- | --- |
@@ -196,6 +202,7 @@ clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等�
 | `defvaralias: Overwriting value of ‘eglot-confirm-server-edits’` | 配置里给 `eglot-confirm-server-*` 赋过值；改用 `refactor-confirmation`，或直接删掉那条 `setq` |
 | 启动时 `Warning (comp): project.el … Buffer-menu-show-internal / customize-dirlocals not known` | project 0.12.0 在 Emacs 29 上引用了 30 才有的符号，是 native-comp 编它的告警（不影响运行）；`core/suppress.el` 已在 29.x 上跳过 project.el 的 JIT native 编译 |
 | `C-x p b` 报 `void-variable Buffer-menu-show-internal` | project 0.12.0 在 Emacs 29 上的上游 bug；`core/compat.el` 已补，若删掉它请保留补丁 |
+| `F4` 好像要 `.h` 和 `.cpp` 都打开才能切 | 不用。clangd 索引就绪时 `switchSourceHeader` 直接返回目标文件；索引没好或没连 LSP 时，`my/cc--find-counterpart` 按同名文件在**当前目录/整个工程**里找，找不到才报错，不会再弹目录选择 |
 | `M-.` 和 `M-,` 看起来都在 .c/.h 之间跳 | 两者不是一回事：`M-.`（`xref-find-definitions`）跳 clangd 认为的定义（声明在头文件、实现在 .cpp 时落点由 clangd 索引决定，可能落在头文件），`M-,`（`xref-go-back`）回到跳转前的位置；短键 `C-c .` / `C-c ,` 与它们等价。按文件名配对切换用 `F4` |
 | `which-key` 相关报错 | 没装 which-key（Emacs 29 不内置）；本配置已 `:ensure t` |
 | 符号/引用是旧代码 | clangd 缓存了 `compile_commands.json`，重新生成后 `C-c L R` 重连 |

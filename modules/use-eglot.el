@@ -48,12 +48,50 @@
 (declare-function jsonrpc-request "jsonrpc" (server method params &rest args))
 
 ;;; 头文件 <-> 源文件
-;; Eglot 不带 clangd 的 switchSourceHeader, 直接用 jsonrpc 请求;
-;; 不是 clangd 接管的 buffer 就退回按文件名配对的 ff-find-other-file.
+;; 优先 clangd 的 switchSourceHeader: 它靠工程索引找对应文件, 目标文件不需要先打开.
+;; 拿不到时再按"同名 + 换扩展名"在当前目录 / 整个工程里找, 不弹目录选择.
+(defconst my/cc-source-extensions '("c" "cc" "cpp" "cxx" "m" "mm"))
+(defconst my/cc-header-extensions '("h" "hh" "hpp" "hxx" "inl" "inc"))
+
+(defun my/cc--counterpart-extensions (ext)
+  "Return the source/header extensions matching EXT (or nil)."
+  (cond ((member ext my/cc-source-extensions) my/cc-header-extensions)
+        ((member ext my/cc-header-extensions) my/cc-source-extensions)))
+
+(defun my/cc--find-counterpart ()
+  "Find the same-named header/source of the current buffer, or nil.
+Searches the current directory first, then the whole project."
+  (let* ((file (buffer-file-name))
+         (ext (and file (downcase (or (file-name-extension file) ""))))
+         (stem (and file (file-name-sans-extension
+                          (file-name-nondirectory file))))
+         (exts (and file (my/cc--counterpart-extensions ext)))
+         (dir (and file (file-name-directory file)))
+         found)
+    (when (and file exts)
+      ;; 1) 同目录
+      (dolist (e exts)
+        (when (null found)
+          (let ((f (expand-file-name (concat stem "." e) dir)))
+            (when (file-exists-p f) (setq found f)))))
+      ;; 2) 工程内任意目录的同名文件
+      (when (null found)
+        (let* ((project (ignore-errors (project-current)))
+               (files (and project (ignore-errors (project-files project)))))
+          (dolist (f files)
+            (when (null found)
+              (when (and (string= stem (file-name-sans-extension
+                                        (file-name-nondirectory f)))
+                         (member (downcase (or (file-name-extension f) ""))
+                                 exts))
+                (setq found f))))))
+      found)))
+
 (defun my/eglot-switch-header ()
   "Switch between the C/C++ header and its source file.
-Uses clangd's switchSourceHeader when Eglot manages the buffer,
-otherwise falls back to `ff-find-other-file' (purely filename based)."
+Uses clangd's switchSourceHeader when Eglot manages the buffer; otherwise
+looks for a same-named file with the counterpart extension in the current
+directory or anywhere in the project."
   (interactive)
   (let ((path (when (eglot-managed-p)
                 (ignore-errors
@@ -67,8 +105,11 @@ otherwise falls back to `ff-find-other-file' (purely filename based)."
       (setq path (eglot-uri-to-path path)))
     (if (and (stringp path) (not (string-empty-p path)))
         (find-file path)
-      (require 'find-file)
-      (call-interactively #'ff-find-other-file))))
+      (let ((other (my/cc--find-counterpart)))
+        (if other
+            (find-file other)
+          (user-error "No matching header/source for %s"
+                      (or (buffer-file-name) (buffer-name))))))))
 
 ;;; 键位
 ;; 前缀沿用原 lsp-mode 时代的两套: `C-c L` 是"对代码做操作", `C-c l` 是"看东西".

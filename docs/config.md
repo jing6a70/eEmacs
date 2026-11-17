@@ -366,7 +366,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | 内容 | 说明 |
 |---|---|
 | 启动时机 | `c-mode-hook` / `c++-mode-hook` / `objc-mode-hook` 里调 `my/eglot-ensure-with-server`，clangd 存在才 `eglot-ensure` |
-| server 映射 | Emacs 29 的 `eglot-server-programs` 已把 c/c++ 映射到 `clangd`（找不到再试 `ccls`），模块里不重复写 |
+| server 映射 | 显式注册 `(c-mode c-ts-mode c++-mode c++-ts-mode objc-mode) → ("clangd" "--background-index")`，保留 `ccls` 作备选；`--background-index` 让 clangd 按 `compile_commands.json` 建**全工程**后台索引，跳转/引用/F4 不需要先打开目标文件（补全仍是 per-buffer） |
 | 签名提示 | 由 Eglot 的 eldoc 集成负责：输入 `(` `,` 时在 **echo area** 显示；`corfu` 弹窗里只显示候选与文档摘要，不显示调用签名 |
 | clangd 缺失 | 只在 `*Warnings*` 里留一条记录，不阻断打开文件 |
 | 工程根与参数 | 工程根由 Eglot/project.el 推断（`.git`、`compile_commands.json` 等）；clangd 自己的参数优先写在工程根的 `.clangd` 里 |
