@@ -74,12 +74,13 @@ otherwise falls back to `ff-find-other-file' (purely filename based)."
 ;; 前缀沿用原 lsp-mode 时代的两套: `C-c L` 是"对代码做操作", `C-c l` 是"看东西".
 ;; 命令都带 autoload(eglot 及 Emacs 内置), 或由 consult 提供, 不按键就不增加启动时间.
 
-;; F4: C/C++/ObjC 里的"源文件 <-> 头文件"切换(以前 C-c l . 的常用键).
-;; 不用全局绑定, 免得在非 C 系 buffer 里按 F4 报错.
-(defun my/cc-bind-f4 ()
-  "Bind F4 to `my/eglot-switch-header' in the current C-like buffer."
-  (keymap-local-set "<f4>" #'my/eglot-switch-header))
-(add-hook 'c-mode-common-hook #'my/cc-bind-f4)
+;; C/C++/ObjC 专属键(只改 C 系 mode map, 不碰全局):
+;;   F4     源文件 <-> 头文件
+;;   C-c .  跳到定义; cc-mode 默认把 C-c . 绑给 c-set-style, 这里让位
+(with-eval-after-load 'cc-mode
+  (dolist (map '(c-mode-map c++-mode-map objc-mode-map))
+    (keymap-set (symbol-value map) "<f4>" #'my/eglot-switch-header)
+    (keymap-set (symbol-value map) "C-c ." #'xref-find-definitions)))
 
 (defvar my/eglot-keymap
   (define-keymap
@@ -96,7 +97,8 @@ otherwise falls back to `ff-find-other-file' (purely filename based)."
           "d" 'eglot-find-declaration
           "i" 'eglot-find-implementation
           "t" 'eglot-find-typeDefinition
-          "r" 'xref-find-references))
+          "r" 'xref-find-references
+          "a" 'xref-find-apropos))         ; workspace/symbol
   "`C-c L' 前缀: Eglot 操作类命令.")
 
 (defvar my/eglot-view-keymap
@@ -114,8 +116,13 @@ otherwise falls back to `ff-find-other-file' (purely filename based)."
 ;; 工程级错误列表(flymake 按文件分组, 相当于以前的 lsp-treemacs-errors-list)
 (keymap-set global-map "M-9" 'flymake-show-project-diagnostics)
 
-;; 工程内按名字搜符号(workspace/symbol)。常用, 单独放 C-c f, 不再挂在 C-c L g a 下
-(keymap-set global-map "C-c f" 'xref-find-apropos)
+;; 日常跳转的短键(M-. / M-, 保留为 xref 默认):
+;;   C-c .  跳到定义
+;;   C-c ,  跳回上一个位置
+;;   C-c f  找引用
+(keymap-set global-map "C-c ." 'xref-find-definitions)
+(keymap-set global-map "C-c ," 'xref-go-back)
+(keymap-set global-map "C-c f" 'xref-find-references)
 
 ;;; 语言文件共用的小工具
 

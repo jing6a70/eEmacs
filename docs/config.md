@@ -350,7 +350,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `eglot` | 用 **GNU ELPA 的 1.26**（内置 1.15 与 dape 需要的 jsonrpc 1.0.30 不兼容，详见 [eglot.md](eglot.md)）；模块加载时检查 `package-installed-p 'eglot '(1 26)`，缺了自动 `package-install` 并提示重启；`:ensure nil` 不走 use-package 的安装，`:commands (eglot eglot-ensure)` 让语言文件调用时不立即加载 |
 | 选项 | `eglot-autoshutdown t`（最后一个 buffer 关掉就收 server）、`eglot-send-changes-idle-time 0.5`、`eglot-extend-to-xref t`、`read-process-output-max` 1MB；通信日志用默认的 `eglot-events-buffer-config`（2MB）；server 主动改文件的确认交给 refactor 的 `refactor-confirmation`，**不要 setq** `eglot-confirm-server-*`（obsolete 别名，会出 defvaralias 告警） |
 | `which-key` | Eglot 不依赖它，但 `C-c L` / `C-c l` 前缀按下去能列出后续按键，保留 |
-| `C-c L` 前缀 | `r` 改名、`a` code action、`o` 整理 import、`f` 格式化、`h` `eldoc-doc-buffer`、`e` 通信日志、`s` 断开、`R` 重连；`g` 子前缀：`g` 定义 / `d` 声明 / `i` 实现 / `t` 类型定义 / `r` 引用；工程搜符号单独放在 **`C-c f`**（`xref-find-apropos`） |
+| `C-c L` 前缀 | `r` 改名、`a` code action、`o` 整理 import、`f` 格式化、`h` `eldoc-doc-buffer`、`e` 通信日志、`s` 断开、`R` 重连；`g` 子前缀：`g` 定义 / `d` 声明 / `i` 实现 / `t` 类型定义 / `r` 引用 / `a` 工程搜符号（`xref-find-apropos`） |
+| `C-c .` / `C-c ,` / `C-c f` | 跳定义 / 跳回 / 找引用的短键（`M-.` `M-,` `M-?` 同效）；`C-c .` 在 C/C++ 里覆盖 cc-mode 默认的 `c-set-style` |
 | `C-c l` 前缀 | `s` `consult-imenu`（文件内符号）、`d` `consult-flymake`（诊断带预览）、`i` `eglot-inlay-hints-mode`、`r` 引用、`.` `my/eglot-switch-header`（头文件 ↔ 源文件：clangd 的 `switchSourceHeader`，没接管时退回 `ff-find-other-file`）；C/C++/ObjC buffer 里同一个命令还绑在 **`F4`**（`c-mode-common-hook` 里 `keymap-local-set`，不污染全局） |
 | `M-9` | `flymake-show-project-diagnostics`，按文件分组的工程级错误列表 |
 | 接管 buffer 后自动开启 | flymake（诊断）、eldoc（签名/悬停）、`completion-at-point-functions`（corfu 的 LSP 候选）、xref 后端、imenu、inlay hints、`eglot-semantic-tokens-mode`——都是 Eglot 自己做的，模块里不用重复配 |
@@ -400,7 +401,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `C-c L` | Eglot 操作前缀（改名/code action/格式化/跳转，见 [eglot.md](eglot.md)） |
 | `C-c l` | Eglot 查看前缀（符号/诊断/inlay hints/头文件切换，见 [eglot.md](eglot.md)） |
 | `M-9` | 工程级诊断列表（flymake） |
-| `C-c f` | 工程内按名字搜符号（`xref-find-apropos`，Eglot 的 `workspace/symbol`） |
+| `C-c .` / `C-c ,` / `C-c f` | 跳到定义 / 跳回 / 找引用（xref；同 `M-.` `M-,` `M-?`） |
+| `C-c L g a` | 工程内按名字搜符号（`xref-find-apropos`，Eglot 的 `workspace/symbol`） |
 | `C-x u`（可连按 `u`） | 撤销（repeat-mode） |
 | `C-c <left>` / `C-c <right>` | 撤销 / 重做窗口布局 |
 | `Shift + ↑↓←→` | 切换窗口焦点 |
