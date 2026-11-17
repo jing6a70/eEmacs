@@ -37,8 +37,8 @@
 │   ├── use-hungry-delete.el # 连删空白(hungry-delete)
 │   ├── use-multi-edit.el    # 批量多行编辑(iedit + occur-edit)
 │   ├── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
-│   ├── use-corfu.el         # 行内补全(corfu + cape)
 │   ├── use-yasnippet.el     # 代码片段(yasnippet)
+│   ├── use-corfu.el         # 行内补全(corfu + cape + yasnippet-capf)
 │   ├── use-eglot.el         # LSP 通用配置(Eglot 1.26, 来自 GNU ELPA)
 │   └── use-clangd.el        # C/C++ 的 LSP(clangd)
 └── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / corfu.md / yasnippet.md / eglot.md / quickstartguide.org)
@@ -64,8 +64,8 @@ early-init.el
        ├─ modules/use-hungry-delete.el
        ├─ modules/use-multi-edit.el
        ├─ modules/use-vertico.el
-       ├─ modules/use-corfu.el
        ├─ modules/use-yasnippet.el
+       ├─ modules/use-corfu.el
        ├─ modules/use-eglot.el
        ├─ modules/use-clangd.el
        ├─ keybindings.el
@@ -317,7 +317,8 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 | 内容 | 说明 |
 |---|---|
-| `corfu` | 缓冲区内补全弹窗；`corfu-auto t`、`corfu-auto-delay 0.3`、`corfu-auto-prefix 2`（设 1 会在每个字符上都打一次 LSP 请求）、`corfu-cycle t`，并开 `corfu-popupinfo-mode` |
+| `corfu` | 缓冲区内补全弹窗；`corfu-auto t`、`corfu-auto-delay 0.25`、`corfu-auto-prefix 2`（默认 3；设 1 会在每个字符上都打一次 LSP 请求）、`corfu-cycle t`、`corfu-preselect 'prompt`（预选输入，第一候选不预选）、`corfu-preview-current nil`（不自动插入候选）；开 `corfu-popupinfo-mode`，文档延迟 `(0.6 . 0.4)`（调太短会频繁向 clangd 要 hover） |
+| `orderless` | 只在 `use-vertico.el` 里配（`completion-styles`、`completion-category-overrides`），本模块不重复，避免两处维护 |
 | `cape` | LSP 之外的后备候选：`cape-file`(80) 补路径、`cape-dabbrev`(90) 补词；按 CAPF 深度排在 LSP（0）之后 |
 | `yasnippet-capf` | 片段候选（50）。**cape 没有 yasnippet 后端**，不要写 `cape-yasnippet` |
 | 作用范围 | 以上后备只挂在 `prog-mode` / `text-mode` / `org-mode` 里 |
