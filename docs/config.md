@@ -147,12 +147,13 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 
 ## core/suppress.el（告警收敛）
 
-仅对 Emacs 28.1+ 生效：
+前两项仅对 Emacs 28.1+ 生效，最后一项仅对 Emacs < 30 生效：
 
 | 选项 | 说明 |
 |---|---|
 | `byte-compile-docstring-max-column 120` | docstring 超过 120 列才告警（默认 80） |
 | `byte-compile-warnings '(not not-unused lexical)` | 关闭 `_` 前缀变量的 `not-unused` 告警与宏展开产生的 `lexical` 误报，其余保持默认 |
+| `native-comp-jit-compilation-deny-list` | Emacs < 30 时把 `/project\.el\'` 加进跳过列表：project 0.12.0（eglot 1.26 的依赖）引用了 Emacs 30 才有的 `Buffer-menu-show-internal`、`customize-dirlocals`，JIT native 编译会刷两条 `Warning (comp)`；包内有 `.elc`，跳过 native 编译只退化为字节码，功能不变。运行期缺变量由 `core/compat.el` 补 |
 
 ## core/compat.el（跨版本补丁）
 

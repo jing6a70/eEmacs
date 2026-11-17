@@ -184,6 +184,7 @@ clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等�
 | 改了 server 参数不生效 | 写完后 `C-c L s` 断开再重开文件，或 `C-c L R` 重连 |
 | 启动时看到 `‘:events-buffer-scrollback-size’ deprecated` 或 `jsonrpc--request-continuations ... not known to be defined` | 用的是内置 eglot 1.15 + 新版 jsonrpc，版本不匹配；装 GNU ELPA 的 `eglot`（≥1.26）后重启（见文首说明） |
 | `defvaralias: Overwriting value of ‘eglot-confirm-server-edits’` | 配置里给 `eglot-confirm-server-*` 赋过值；改用 `refactor-confirmation`，或直接删掉那条 `setq` |
+| 启动时 `Warning (comp): project.el … Buffer-menu-show-internal / customize-dirlocals not known` | project 0.12.0 在 Emacs 29 上引用了 30 才有的符号，是 native-comp 编它的告警（不影响运行）；`core/suppress.el` 已在 29.x 上跳过 project.el 的 JIT native 编译 |
 | `C-x p b` 报 `void-variable Buffer-menu-show-internal` | project 0.12.0 在 Emacs 29 上的上游 bug；`core/compat.el` 已补，若删掉它请保留补丁 |
 | `which-key` 相关报错 | 没装 which-key（Emacs 29 不内置）；本配置已 `:ensure t` |
 | 符号/引用是旧代码 | clangd 缓存了 `compile_commands.json`，重新生成后 `C-c L R` 重连 |
