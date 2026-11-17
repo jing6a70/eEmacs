@@ -11,8 +11,6 @@
   (corfu-auto-delay 0.25)               ; 停 0.25 秒后弹(默认 0.2)
   (corfu-auto-prefix 2)                 ; 默认 3; 2 更早触发(请求更多), 只有 1 才是"每字符都发请求"
   (corfu-cycle t)                       ; 候选可循环
-  (corfu-preselect 'prompt)             ; 预选输入本身, 配合 orderless 多段匹配更顺
-  (corfu-preview-current nil)           ; 继续输入时不自动插入当前候选
   ;; 别设太短: 每个候选都要向 server(clangd hover)取一次文档, 0.2 秒会明显加负载
   (corfu-popupinfo-delay '(0.6 . 0.4))
   :config

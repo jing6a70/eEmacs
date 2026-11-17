@@ -165,6 +165,10 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 
 以后升级 Emacs 到 30+ 时这条补丁即可删除（它自带 `version<` 判断，留着也无害）。
 
+注意它的 feature 是 `my-compat`，**不能** `(provide 'compat)`：ELPA 的 `compat` 包
+（corfu/cape/vertico/consult/orderless/magit 都依赖）同名，提前 provide 会让它们的
+`(require 'compat)` 短路，真正的 compat 库不加载。
+
 ## modules/use-magit.el（magit + diff-hl）
 
 | 内容 | 说明 |
@@ -318,7 +322,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 | 内容 | 说明 |
 |---|---|
-| `corfu` | 缓冲区内补全弹窗；`corfu-auto t`、`corfu-auto-delay 0.25`、`corfu-auto-prefix 2`（默认 3；设 1 会在每个字符上都打一次 LSP 请求）、`corfu-cycle t`、`corfu-preselect 'prompt`（预选输入，第一候选不预选）、`corfu-preview-current nil`（不自动插入候选）；开 `corfu-popupinfo-mode`，文档延迟 `(0.6 . 0.4)`（调太短会频繁向 clangd 要 hover） |
+| `corfu` | 缓冲区内补全弹窗；`corfu-auto t`、`corfu-auto-delay 0.25`、`corfu-auto-prefix 2`（默认 3；设 1 会在每个字符上都打一次 LSP 请求）、`corfu-cycle t`；`corfu-preselect` / `corfu-preview-current` 保持默认（`'valid` / `'insert`，改 `'prompt` + `nil` 会让 `RET` 只接受输入、像"补全失效"）；开 `corfu-popupinfo-mode`，文档延迟 `(0.6 . 0.4)`（调太短会频繁向 clangd 要 hover） |
 | `orderless` | 只在 `use-vertico.el` 里配（`completion-styles`、`completion-category-overrides`），本模块不重复，避免两处维护 |
 | `cape` | LSP 之外的后备候选：`cape-file`(80) 补路径、`cape-dabbrev`(90) 补词；按 CAPF 深度排在 LSP（0）之后 |
 | `yasnippet-capf` | 片段候选（50）。**cape 没有 yasnippet 后端**，不要写 `cape-yasnippet` |
