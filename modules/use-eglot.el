@@ -1,5 +1,11 @@
 ;;; use-eglot.el --- Eglot(LSP 客户端)通用配置 -*- lexical-binding: t; -*-
-;; Emacs 29 起 Eglot 内置(`eglot.el`), 不需要从 MELPA 安装第三方包.
+;; Eglot 用 GNU ELPA 的 1.26, 不用 Emacs 29.3 内置的 1.15:
+;;   内置 1.15 读的是 jsonrpc 1.0.16 的私有接口, 而 dape 需要 ELPA 的
+;;   jsonrpc >= 1.0.25 —— 新 jsonrpc 把 `jsonrpc--request-continuations'
+;;   改了名, 还废弃了 `:events-buffer-scrollback-size'; 两者混用时启动会看到
+;;   "deprecated" 和 "not known to be defined" 两条告警, 且 eglot 的 modeline
+;;   会因 void-function 报错. eglot 1.26 和 jsonrpc 1.0.30 是同一代, 配套.
+;; 新机器首次启动会自动装(需要网络); 装完重启一次生效.
 ;; 这里只放所有语言共用的部分: 全局选项、键位、以及语言文件共用的工具函数.
 ;; 具体语言(clangd / gopls / pyright ...)的 mode hook 与 server 参数放各自的语言文件.
 
@@ -11,21 +17,34 @@
   :ensure t
   :init (which-key-mode 1))
 
+(unless (package-installed-p 'eglot '(1 26))
+  (condition-case err
+      (progn
+        (package-refresh-contents)
+        (let ((desc (cadr (assq 'eglot package-archive-contents))))
+          (when desc (package-install desc)))
+        (display-warning
+         'eglot
+         "已安装 GNU ELPA 的 eglot 1.26, 重启 Emacs 后生效(内置 1.15 与 jsonrpc 1.0.30 不兼容)"))
+    (error (display-warning
+            'eglot (format "GNU ELPA 的 eglot 1.26 安装失败: %S" err)))))
+
 (use-package eglot
-  :ensure nil                        ; Emacs 29+ 内置, 别从 MELPA 再装一份
+  :ensure nil                        ; 版本由上面的检查保证, 不走 :ensure
   :commands (eglot eglot-ensure)
   :init
   (setq eglot-autoshutdown t               ; 最后一个被接管的 buffer 关掉就收 server
         eglot-send-changes-idle-time 0.5   ; 停手 0.5 秒才把改动发给 server
-        eglot-confirm-server-initiated-edits 'confirm
-        eglot-extend-to-xref t             ; 顺着 xref 进工程外的文件也接管
-        eglot-events-buffer-size 2000000))
+        eglot-extend-to-xref t))           ; 顺着 xref 进工程外的文件也接管
+;; server 主动改文件(Rename/applyEdit)的确认由 refactor-confirmation 控制,
+;; eglot 1.26 里 eglot-confirm-server-* 都是指向它的 obsolete 别名, 别再单独 setq,
+;; 否则加载时会多一条 defvaralias 告警.
 
 ;; 不 require eglot, 但下面的函数用得到它; 声明一下让字节编译安静
 (declare-function eglot-managed-p "eglot")
 (declare-function eglot-current-server "eglot")
 (declare-function eglot--TextDocumentIdentifier "eglot")
-(declare-function eglot--uri-to-path "eglot" (uri))
+(declare-function eglot-uri-to-path "eglot" (uri))
 (declare-function jsonrpc-request "jsonrpc" (server method params &rest args))
 
 ;;; 头文件 <-> 源文件
@@ -45,7 +64,7 @@ otherwise falls back to `ff-find-other-file' (purely filename based)."
                                    (eglot--TextDocumentIdentifier))))))
     ;; clangd 正常回绝对路径, 万一回 file:// URI 也认
     (when (and (stringp path) (string-prefix-p "file://" path))
-      (setq path (eglot--uri-to-path path)))
+      (setq path (eglot-uri-to-path path)))
     (if (and (stringp path) (not (string-empty-p path)))
         (find-file path)
       (require 'find-file)

@@ -7,7 +7,7 @@
 - 补全：`vertico`、`orderless`、`marginalia`、`consult`、`embark`、`embark-consult`、`corfu`、`cape`
 - 片段：`yasnippet`、`yasnippet-snippets`、`yasnippet-capf`
 - 调试：`dape`
-- LSP：`Eglot`（Emacs 29 起内置，不装第三方客户端）；`which-key` 只负责给 `C-c L` / `C-c l` 前缀加提示
+- LSP：`Eglot`（GNU ELPA 的 1.26，见 [eglot.md](eglot.md) 文首的版本说明）；`which-key` 只负责给 `C-c L` / `C-c l` 前缀加提示
 
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装。）
 
@@ -26,7 +26,8 @@
 │   ├── view.el              # 界面与显示
 │   ├── edit.el              # 编辑行为与 C/C++ 代码风格
 │   ├── theme.el             # 主题加载与回退
-│   └── suppress.el          # 字节编译告警收敛
+│   ├── suppress.el          # 字节编译告警收敛
+│   └── compat.el            # 第三方包与内置库的跨版本补丁
 ├── modules/
 │   ├── use-magit.el         # magit + diff-hl
 │   ├── use-dape.el          # dape 调试(含 gdb-remote 远程 attach)
@@ -38,7 +39,7 @@
 │   ├── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
 │   ├── use-corfu.el         # 行内补全(corfu + cape)
 │   ├── use-yasnippet.el     # 代码片段(yasnippet)
-│   ├── use-eglot.el         # LSP 通用配置(Eglot, Emacs 29 内置)
+│   ├── use-eglot.el         # LSP 通用配置(Eglot 1.26, 来自 GNU ELPA)
 │   └── use-clangd.el        # C/C++ 的 LSP(clangd)
 └── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / corfu.md / yasnippet.md / eglot.md / quickstartguide.org)
 ```
@@ -54,6 +55,7 @@ early-init.el
        ├─ core/edit.el
        ├─ core/theme.el
        ├─ core/suppress.el
+       ├─ core/compat.el
        ├─ modules/use-magit.el     (my/local-modules)
        ├─ modules/use-dape.el
        ├─ modules/use-dashboard.el
@@ -151,6 +153,16 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 |---|---|
 | `byte-compile-docstring-max-column 120` | docstring 超过 120 列才告警（默认 80） |
 | `byte-compile-warnings '(not not-unused lexical)` | 关闭 `_` 前缀变量的 `not-unused` 告警与宏展开产生的 `lexical` 误报，其余保持默认 |
+
+## core/compat.el（跨版本补丁）
+
+第三方包比内置库新时需要的补丁，只有两行，但要写清来由：
+
+| 补丁 | 说明 |
+|---|---|
+| `Buffer-menu-show-internal` | project 0.12.0（`eglot 1.26` 的依赖）在 Emacs 29 上会读这个 Emacs 30 才有的变量，导致 `C-x p b`（`project-list-buffers`）报 `void-variable`；`compat.el` 在 `emacs-version < 30` 时给个 `nil` 缺省值，30+ 用真身不覆盖 |
+
+以后升级 Emacs 到 30+ 时这条补丁即可删除（它自带 `version<` 判断，留着也无害）。
 
 ## modules/use-magit.el（magit + diff-hl）
 
@@ -329,13 +341,13 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 | 内容 | 说明 |
 |---|---|
-| `eglot` | `:ensure nil`：**Emacs 29 起内置**，不从 MELPA 再装一份；`:commands (eglot eglot-ensure)` 让语言文件调用时不立即加载 |
-| 选项 | `eglot-autoshutdown t`（最后一个 buffer 关掉就收 server）、`eglot-send-changes-idle-time 0.5`、`eglot-extend-to-xref t`、`eglot-events-buffer-size` 2MB、`read-process-output-max` 1MB |
+| `eglot` | 用 **GNU ELPA 的 1.26**（内置 1.15 与 dape 需要的 jsonrpc 1.0.30 不兼容，详见 [eglot.md](eglot.md)）；模块加载时检查 `package-installed-p 'eglot '(1 26)`，缺了自动 `package-install` 并提示重启；`:ensure nil` 不走 use-package 的安装，`:commands (eglot eglot-ensure)` 让语言文件调用时不立即加载 |
+| 选项 | `eglot-autoshutdown t`（最后一个 buffer 关掉就收 server）、`eglot-send-changes-idle-time 0.5`、`eglot-extend-to-xref t`、`read-process-output-max` 1MB；通信日志用默认的 `eglot-events-buffer-config`（2MB）；server 主动改文件的确认交给 refactor 的 `refactor-confirmation`，**不要 setq** `eglot-confirm-server-*`（obsolete 别名，会出 defvaralias 告警） |
 | `which-key` | Eglot 不依赖它，但 `C-c L` / `C-c l` 前缀按下去能列出后续按键，保留 |
 | `C-c L` 前缀 | `r` 改名、`a` code action、`o` 整理 import、`f` 格式化、`h` `eldoc-doc-buffer`、`e` 通信日志、`s` 断开、`R` 重连；`g` 子前缀：`g` 定义 / `d` 声明 / `i` 实现 / `t` 类型定义 / `r` 引用 / `a` 工程搜符号（`xref-find-apropos`） |
 | `C-c l` 前缀 | `s` `consult-imenu`（文件内符号）、`d` `consult-flymake`（诊断带预览）、`i` `eglot-inlay-hints-mode`、`r` 引用、`.` `my/eglot-switch-header`（头文件 ↔ 源文件：clangd 的 `switchSourceHeader`，没接管时退回 `ff-find-other-file`） |
 | `M-9` | `flymake-show-project-diagnostics`，按文件分组的工程级错误列表 |
-| 接管 buffer 后自动开启 | flymake（诊断）、eldoc（签名/悬停）、`completion-at-point-functions`（corfu 的 LSP 候选）、xref 后端、imenu、inlay hints——都是 Eglot 自己做的，模块里不用重复配 |
+| 接管 buffer 后自动开启 | flymake（诊断）、eldoc（签名/悬停）、`completion-at-point-functions`（corfu 的 LSP 候选）、xref 后端、imenu、inlay hints、`eglot-semantic-tokens-mode`——都是 Eglot 自己做的，模块里不用重复配 |
 | 语言文件共用 | `my/add-exec-path`（往 `exec-path`/$PATH 前插用户 bin 目录）、`my/eglot-ensure-with-server`（server 不在 PATH 时只报警告，不阻断） |
 
 各语言的 mode hook 与 server 参数不放在这里，由语言文件（如 `modules/use-clangd.el`）调用 `my/eglot-ensure-with-server`。
@@ -367,7 +379,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | Emacs ≥ 29 | 依赖默认包激活；优先 `modus-operandi-tinted` |
 | Emacs 28.1+ | `read-extended-command-predicate`、`repeat-mode`、`core/suppress.el` 整体生效 |
 | Emacs 26.1+ | `global-display-line-numbers-mode` |
-| Emacs 29.1+ | `pixel-scroll-precision-mode`；**Eglot 内置**（`use-eglot.el` 用它做 LSP，不再装 lsp-mode） |
+| Emacs 29.1+ | `pixel-scroll-precision-mode`；Eglot 走 GNU ELPA 的 1.26（内置的 1.15 与 dape 需要的 jsonrpc 1.0.30 不兼容），见 [eglot.md](eglot.md) |
 
 版本判断使用 `version<=` / `emacs-major-version`，低版本自动跳过对应功能，不会报错。
 

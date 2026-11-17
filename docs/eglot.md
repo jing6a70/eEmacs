@@ -3,9 +3,21 @@
 > 配置在 `modules/use-eglot.el`：只放所有语言共用的部分。
 > 具体语言（clangd / gopls / pyright …）的 mode hook 与 server 参数放在各自的语言文件里。
 
-Emacs 29 起 **Eglot 是内置包**（`eglot.el`，`M-x eglot` 即用），所以本配置不再安装
-`lsp-mode` / `lsp-ui` / `lsp-treemacs` / `consult-lsp` 那一套：能用内置的就用内置的，
+本配置的 LSP 客户端是 **GNU ELPA 的 Eglot 1.26**（`use-eglot.el` 会检查版本，缺了自动装，
+装完重启一次），不再安装 `lsp-mode` / `lsp-ui` / `lsp-treemacs` / `consult-lsp` 那一套：
 诊断走 flymake、文档/签名走 eldoc、跳转走 xref、补全走 CAPF（交给 corfu）。
+
+> **为什么不用 Emacs 29.3 内置的 eglot 1.15？**
+> 内置 1.15 依赖 jsonrpc 1.0.16 的私有接口（`jsonrpc--request-continuations` 等），
+> 而 `dape` 要求 ELPA 的 `jsonrpc >= 1.0.25`：新版把该接口改了名，并把
+> `:events-buffer-scrollback-size` 标成 deprecated。两代 jsonrpc 不能共存，
+> 混用时启动会看到 `‘:events-buffer-scrollback-size’ deprecated` 和
+> `jsonrpc--request-continuations is not known to be defined` 两条告警，
+> Eglot 的 modeline 还会因 `void-function` 报错。
+> Eglot 1.26 与 jsonrpc 1.0.30 是同一代，配套安装即解决。
+> 副作用：会连带把内置的 `eldoc` / `flymake` / `project` / `xref` / `refactor`
+> 换成 GNU ELPA 版本；`project 0.12.0` 有个只影响 Emacs 29 的上游 bug，
+> 由 `core/compat.el` 补掉（见 [config.md](config.md#corecompatel跨版本补丁)）。
 
 ## 1. 架构
 
@@ -76,12 +88,13 @@ modules/use-clangd.el       ← 语言: 什么时候启动 clangd、传什么参
 | `eglot-send-changes-idle-time` | `0.5` | 停手 0.5 秒才把改动发给 server，省 CPU |
 | `eglot-sync-connect` | `3`（默认） | 启动连接时最多阻塞 3 秒，超时转异步，不会卡死 |
 | `eglot-extend-to-xref` | `t` | 顺着 xref 跳到工程外的文件时也接管 |
-| `eglot-confirm-server-initiated-edits` | `'confirm` | server 主动改文件（`workspace/applyEdit`）前先确认 |
+| `refactor-confirmation` | 默认 `'((t . maybe-summary))` | server 主动改文件（`workspace/applyEdit`）时的确认策略；`eglot-confirm-server-*` 在 1.26 里都是它的 obsolete 别名，**不要再单独 setq**（会多一条 defvaralias 告警） |
+| `eglot-events-buffer-config` | 默认 `(:size 2000000 :format full)` | 通信日志上限 2MB，`C-c L e` 打开 |
 | `read-process-output-max` | 1MB | 提高与 server 的管道吞吐（默认 4KB 偏小） |
 
-Eglot 内置的"周边设施"不需要我们再配：接管 buffer 时它自己会开 `flymake-mode`、
-`eldoc-mode`、`eglot-inlay-hints-mode`，挂 `completion-at-point-functions`、
-`xref-backend-functions` 和 imenu。
+Eglot 自己会把"周边设施"接上：接管 buffer 时自动开 `flymake-mode`、`eldoc-mode`、
+`eglot-inlay-hints-mode`、`eglot-semantic-tokens-mode`，挂
+`completion-at-point-functions`、`xref-backend-functions` 和 imenu。
 想自己接管某项（比如另配诊断前端），往 `eglot-stay-out-of` 里加对应符号。
 
 ## 4. 补全 / 诊断 / 文档
@@ -93,7 +106,8 @@ Eglot 内置的"周边设施"不需要我们再配：接管 buffer 时它自己�
 | 诊断（波浪线/边缘标记） | flymake | 内置；`M-x flymake-show-buffer-diagnostics` 看当前文件 |
 | 诊断列表 | `C-c l d` / `M-9` | `consult-flymake` 带预览；`M-9` 是工程级 |
 | 签名/悬停文档 | eldoc | 输入 `(` `,` 时自动在 **echo area** 显示；`C-c L h` 开完整文档 |
-| inlay hints | `C-c l i` | 参数名和推导类型以小字画在代码里（Emacs 29.3 的 Eglot 默认开，大文件卡就关掉） |
+| inlay hints | `C-c l i` | 参数名和推导类型以小字画在代码里（Eglot 默认开，大文件卡就关掉） |
+| 语义高亮 | 自动 | `eglot-semantic-tokens-mode` 随接管自动开；clangd 支持，颜色更准 |
 
 corfu 的细节见 [corfu.md](corfu.md)。
 
@@ -118,7 +132,7 @@ server 装在用户目录（`~/go/bin`、`~/.local/npm-global/bin`）时，用 `
 (my/add-exec-path "~/go/bin")
 ```
 
-Emacs 29 的 `eglot-server-programs` 已经内置了常见语言（c/c++ → clangd→ccls、go → gopls、
+Eglot 的 `eglot-server-programs` 自带常见语言（c/c++ → clangd→ccls、go → gopls、
 python → pylsp、js/ts → typescript-language-server …），一般不用自己写。要换 server 或加参数：
 
 ```elisp
@@ -168,6 +182,9 @@ clangd 首次会建后台索引（`~/.cache/clangd/index`），大工程要等�
 | inlay hints 卡顿 | `C-c l i` 关掉；不想每次手动关就在 `eglot-managed-mode-hook` 里关 |
 | 服务端一直 pending | 看 `M-x eglot-stderr-buffer`；clangd 版本太老（`clangd --version`，建议 14+） |
 | 改了 server 参数不生效 | 写完后 `C-c L s` 断开再重开文件，或 `C-c L R` 重连 |
+| 启动时看到 `‘:events-buffer-scrollback-size’ deprecated` 或 `jsonrpc--request-continuations ... not known to be defined` | 用的是内置 eglot 1.15 + 新版 jsonrpc，版本不匹配；装 GNU ELPA 的 `eglot`（≥1.26）后重启（见文首说明） |
+| `defvaralias: Overwriting value of ‘eglot-confirm-server-edits’` | 配置里给 `eglot-confirm-server-*` 赋过值；改用 `refactor-confirmation`，或直接删掉那条 `setq` |
+| `C-x p b` 报 `void-variable Buffer-menu-show-internal` | project 0.12.0 在 Emacs 29 上的上游 bug；`core/compat.el` 已补，若删掉它请保留补丁 |
 | `which-key` 相关报错 | 没装 which-key（Emacs 29 不内置）；本配置已 `:ensure t` |
 | 符号/引用是旧代码 | clangd 缓存了 `compile_commands.json`，重新生成后 `C-c L R` 重连 |
 
