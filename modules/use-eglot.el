@@ -1,0 +1,113 @@
+;;; use-eglot.el --- Eglot(LSP 客户端)通用配置 -*- lexical-binding: t; -*-
+;; Emacs 29 起 Eglot 内置(`eglot.el`), 不需要从 MELPA 安装第三方包.
+;; 这里只放所有语言共用的部分: 全局选项、键位、以及语言文件共用的工具函数.
+;; 具体语言(clangd / gopls / pyright ...)的 mode hook 与 server 参数放各自的语言文件.
+
+;; 与 server 的管道吞吐; 默认 4KB 对流式 JSON-RPC 偏小
+(setq read-process-output-max (* 1024 1024))
+
+;; C-c L / C-c l 这些前缀按下去会列出后续按键, 不用背
+(use-package which-key
+  :ensure t
+  :init (which-key-mode 1))
+
+(use-package eglot
+  :ensure nil                        ; Emacs 29+ 内置, 别从 MELPA 再装一份
+  :commands (eglot eglot-ensure)
+  :init
+  (setq eglot-autoshutdown t               ; 最后一个被接管的 buffer 关掉就收 server
+        eglot-send-changes-idle-time 0.5   ; 停手 0.5 秒才把改动发给 server
+        eglot-confirm-server-initiated-edits 'confirm
+        eglot-extend-to-xref t             ; 顺着 xref 进工程外的文件也接管
+        eglot-events-buffer-size 2000000))
+
+;; 不 require eglot, 但下面的函数用得到它; 声明一下让字节编译安静
+(declare-function eglot-managed-p "eglot")
+(declare-function eglot-current-server "eglot")
+(declare-function eglot--TextDocumentIdentifier "eglot")
+(declare-function eglot--uri-to-path "eglot" (uri))
+(declare-function jsonrpc-request "jsonrpc" (server method params &rest args))
+
+;;; 头文件 <-> 源文件
+;; Eglot 不带 clangd 的 switchSourceHeader, 直接用 jsonrpc 请求;
+;; 不是 clangd 接管的 buffer 就退回按文件名配对的 ff-find-other-file.
+(defun my/eglot-switch-header ()
+  "Switch between the C/C++ header and its source file.
+Uses clangd's switchSourceHeader when Eglot manages the buffer,
+otherwise falls back to `ff-find-other-file' (purely filename based)."
+  (interactive)
+  (let ((path (when (eglot-managed-p)
+                (ignore-errors
+                  ;; clangd 的扩展方法参数就是 TextDocumentIdentifier 本身,
+                  ;; 不像标准方法那样再包一层 :textDocument
+                  (jsonrpc-request (eglot-current-server)
+                                   :textDocument/switchSourceHeader
+                                   (eglot--TextDocumentIdentifier))))))
+    ;; clangd 正常回绝对路径, 万一回 file:// URI 也认
+    (when (and (stringp path) (string-prefix-p "file://" path))
+      (setq path (eglot--uri-to-path path)))
+    (if (and (stringp path) (not (string-empty-p path)))
+        (find-file path)
+      (require 'find-file)
+      (call-interactively #'ff-find-other-file))))
+
+;;; 键位
+;; 前缀沿用原 lsp-mode 时代的两套: `C-c L` 是"对代码做操作", `C-c l` 是"看东西".
+;; 命令都带 autoload(eglot 及 Emacs 内置), 或由 consult 提供, 不按键就不增加启动时间.
+
+(defvar my/eglot-keymap
+  (define-keymap
+    "r" 'eglot-rename                      ; 改名(会提示新名字)
+    "a" 'eglot-code-actions                ; code action: 修错/重构
+    "o" 'eglot-code-action-organize-imports
+    "f" 'eglot-format-buffer               ; 格式化整个 buffer
+    "h" 'eldoc-doc-buffer                  ; 光标处符号的文档
+    "e" 'eglot-events-buffer               ; 与 server 的通信日志(排错用)
+    "s" 'eglot-shutdown                    ; 断开当前 server
+    "R" 'eglot-reconnect                   ; 重连(改了 compile_commands.json 后用)
+    "g" (define-keymap
+          "g" 'xref-find-definitions
+          "d" 'eglot-find-declaration
+          "i" 'eglot-find-implementation
+          "t" 'eglot-find-typeDefinition
+          "r" 'xref-find-references
+          "a" 'xref-find-apropos))         ; workspace/symbol, 按名字片段搜
+  "`C-c L' 前缀: Eglot 操作类命令.")
+
+(defvar my/eglot-view-keymap
+  (define-keymap
+    "s" 'consult-imenu                     ; 当前文件符号, 带预览
+    "d" 'consult-flymake                   ; 诊断列表, 带预览
+    "i" 'eglot-inlay-hints-mode            ; inlay hints 开关(参数名/类型提示)
+    "r" 'xref-find-references
+    "." 'my/eglot-switch-header)
+  "`C-c l' 前缀: 查看类命令.")
+
+(keymap-set global-map "C-c L" my/eglot-keymap)
+(keymap-set global-map "C-c l" my/eglot-view-keymap)
+
+;; 工程级错误列表(flymake 按文件分组, 相当于以前的 lsp-treemacs-errors-list)
+(keymap-set global-map "M-9" 'flymake-show-project-diagnostics)
+
+;;; 语言文件共用的小工具
+
+(defun my/add-exec-path (dir)
+  "Prepend user bin DIR to `exec-path' and the $PATH environment."
+  (setq dir (expand-file-name dir))
+  (when (and (file-directory-p dir)
+             (not (member dir exec-path)))
+    (setq exec-path (cons dir exec-path))
+    (setenv "PATH" (concat dir path-separator (getenv "PATH")))))
+
+(defun my/eglot-ensure-with-server (server install-hint)
+  "Start Eglot when SERVER is in PATH; otherwise warn with INSTALL-HINT.
+Keeps one missing language server from breaking the others."
+  (if (executable-find server)
+      (eglot-ensure)
+    (display-warning
+     'eglot
+     (format "%s not found in PATH; LSP disabled for this buffer.\n  %s"
+             server install-hint))))
+
+(provide 'use-eglot)
+;;; use-eglot.el ends here

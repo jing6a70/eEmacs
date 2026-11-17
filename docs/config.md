@@ -7,7 +7,7 @@
 - 补全：`vertico`、`orderless`、`marginalia`、`consult`、`embark`、`embark-consult`、`corfu`、`cape`
 - 片段：`yasnippet`、`yasnippet-snippets`、`yasnippet-capf`
 - 调试：`dape`
-- LSP：`lsp-mode`、`lsp-ui`、`lsp-treemacs`、`consult-lsp`、`which-key`
+- LSP：`Eglot`（Emacs 29 起内置，不装第三方客户端）；`which-key` 只负责给 `C-c L` / `C-c l` 前缀加提示
 
 （`magit-section` / `transient` / `with-editor` 等依赖随 magit 自动安装。）
 
@@ -38,9 +38,9 @@
 │   ├── use-vertico.el       # 补全框架(vertico/orderless/consult/embark)
 │   ├── use-corfu.el         # 行内补全(corfu + cape)
 │   ├── use-yasnippet.el     # 代码片段(yasnippet)
-│   ├── use-lspmode.el       # LSP 通用配置(lsp-mode/lsp-ui/lsp-treemacs)
+│   ├── use-eglot.el         # LSP 通用配置(Eglot, Emacs 29 内置)
 │   └── use-clangd.el        # C/C++ 的 LSP(clangd)
-└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / corfu.md / yasnippet.md / lsp.md / quickstartguide.org)
+└── docs/                    # 文档(config.md / project.md / magit.md / debug.md / multi-edit.md / undo-tree.md / corfu.md / yasnippet.md / eglot.md / quickstartguide.org)
 ```
 
 ## 启动流程
@@ -64,7 +64,7 @@ early-init.el
        ├─ modules/use-vertico.el
        ├─ modules/use-corfu.el
        ├─ modules/use-yasnippet.el
-       ├─ modules/use-lspmode.el
+       ├─ modules/use-eglot.el
        ├─ modules/use-clangd.el
        ├─ keybindings.el
        └─ server-start / emacs-startup-hook
@@ -88,7 +88,7 @@ core 与 modules 都是数据驱动加载：core 见 `init.el` 中的 `mapc` 列
 | `user-emacs-directory` | 取 `init.el` 实际所在目录（`file-truename`），配置目录可整体搬到任意位置 |
 | `custom-file` → `.config-auto.el` | `M-x customize-*` 的写入定向到独立文件（已 gitignore），不污染 `init.el`；存在则 `load ... 'noerror` |
 | 加载顺序 | core → modules → keybindings，见上方流程图 |
-| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico use-yasnippet use-corfu use-lspmode use-clangd)`，用 `require ... 'noerror` 加载，出错不中断启动 |
+| `my/local-modules` | `(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete use-multi-edit use-vertico use-yasnippet use-corfu use-eglot use-clangd)`，用 `require ... 'noerror` 加载，出错不中断启动 |
 | `server-start` | `noninteractive` / `daemonp` / 已有 server 时跳过，其余情况启动 Emacs server |
 | `emacs-startup-hook` | 启动完成后把 `gc-cons-threshold` 恢复为 16MB |
 
@@ -325,30 +325,32 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 
 片段目录结构、字段跳转键与自定义写法见 [yasnippet.md](yasnippet.md)。
 
-## modules/use-lspmode.el（LSP 通用配置）
+## modules/use-eglot.el（LSP 通用配置）
 
 | 内容 | 说明 |
 |---|---|
-| `lsp-mode` | `:commands (lsp lsp-deferred)`；`lsp-completion-provider :capf`（给 corfu）、`lsp-diagnostics-provider :flymake`、`lsp-enable-snippet t`（由 yasnippet 展开服务端片段）、`read-process-output-max` 1MB |
-| `which-key` | `lsp-enable-which-key-integration` 依赖它；Emacs 29 未内置（30 才内置），所以显式安装并 `which-key-mode` |
-| `lsp-ui` | doc 用 childframe（仅 GUI）、sideline 显示 hover/actions/diagnostics、headerline 面包屑 |
-| `C-c l s` / `C-c l i` / `C-c l d` | `lsp-treemacs-symbols` / `lsp-ui-imenu` / `consult-lsp-diagnostics`；`M-9` 是 `lsp-treemacs-errors-list`。**`C-c s` 仍是 iedit，不要占用** |
-| `C-c l r` / `C-c l .` | `xref-find-references`（找引用）/ `my/lsp-switch-header`（头文件 ↔ 源文件，优先 clangd 的 switchSourceHeader） |
-| 自动弹符号面板 | `lsp-after-initialize-hook` 触发，用 `my/lsp-auto-symbols-p` 开关控制；请求走 `lsp-request-async`（同步会卡 UI），clangd 冷启动时最多重试 3 次 |
-| 语言文件共用 | `my/add-exec-path`（往 `exec-path`/$PATH 前插用户 bin 目录）、`my/lsp-deferred-with-server`（server 不在 PATH 时只报警告，不阻断） |
+| `eglot` | `:ensure nil`：**Emacs 29 起内置**，不从 MELPA 再装一份；`:commands (eglot eglot-ensure)` 让语言文件调用时不立即加载 |
+| 选项 | `eglot-autoshutdown t`（最后一个 buffer 关掉就收 server）、`eglot-send-changes-idle-time 0.5`、`eglot-extend-to-xref t`、`eglot-events-buffer-size` 2MB、`read-process-output-max` 1MB |
+| `which-key` | Eglot 不依赖它，但 `C-c L` / `C-c l` 前缀按下去能列出后续按键，保留 |
+| `C-c L` 前缀 | `r` 改名、`a` code action、`o` 整理 import、`f` 格式化、`h` `eldoc-doc-buffer`、`e` 通信日志、`s` 断开、`R` 重连；`g` 子前缀：`g` 定义 / `d` 声明 / `i` 实现 / `t` 类型定义 / `r` 引用 / `a` 工程搜符号（`xref-find-apropos`） |
+| `C-c l` 前缀 | `s` `consult-imenu`（文件内符号）、`d` `consult-flymake`（诊断带预览）、`i` `eglot-inlay-hints-mode`、`r` 引用、`.` `my/eglot-switch-header`（头文件 ↔ 源文件：clangd 的 `switchSourceHeader`，没接管时退回 `ff-find-other-file`） |
+| `M-9` | `flymake-show-project-diagnostics`，按文件分组的工程级错误列表 |
+| 接管 buffer 后自动开启 | flymake（诊断）、eldoc（签名/悬停）、`completion-at-point-functions`（corfu 的 LSP 候选）、xref 后端、imenu、inlay hints——都是 Eglot 自己做的，模块里不用重复配 |
+| 语言文件共用 | `my/add-exec-path`（往 `exec-path`/$PATH 前插用户 bin 目录）、`my/eglot-ensure-with-server`（server 不在 PATH 时只报警告，不阻断） |
 
-各语言的 mode hook 与 server 参数不放在这里，由语言文件（如 `e-clang-mode.el`）调用 `my/lsp-deferred-with-server`。
+各语言的 mode hook 与 server 参数不放在这里，由语言文件（如 `modules/use-clangd.el`）调用 `my/eglot-ensure-with-server`。
 
-完整说明见 [lsp.md](lsp.md)。
+完整说明见 [eglot.md](eglot.md)。
 
 ## modules/use-clangd.el（C/C++ 的 LSP）
 
 | 内容 | 说明 |
 |---|---|
-| 启动时机 | `c-mode-hook` / `c++-mode-hook` / `objc-mode-hook` 里调 `my/lsp-deferred-with-server`，clangd 存在才启动 |
-| 签名提示 | lsp-mode 的 `lsp-signature-auto-activate` 默认在 `(` 和 `,` 触发，显示在 **echo area（eldoc）**；`corfu` 弹窗里只显示候选与文档摘要，不显示调用签名 |
+| 启动时机 | `c-mode-hook` / `c++-mode-hook` / `objc-mode-hook` 里调 `my/eglot-ensure-with-server`，clangd 存在才 `eglot-ensure` |
+| server 映射 | Emacs 29 的 `eglot-server-programs` 已把 c/c++ 映射到 `clangd`（找不到再试 `ccls`），模块里不重复写 |
+| 签名提示 | 由 Eglot 的 eldoc 集成负责：输入 `(` `,` 时在 **echo area** 显示；`corfu` 弹窗里只显示候选与文档摘要，不显示调用签名 |
 | clangd 缺失 | 只在 `*Warnings*` 里留一条记录，不阻断打开文件 |
-| 工程根 | 靠 `lsp-auto-guess-root`，优先 `.git` / `compile_commands.json`；找不到时 `M-x lsp-workspace-restart` 前先建一个 |
+| 工程根与参数 | 工程根由 Eglot/project.el 推断（`.git`、`compile_commands.json` 等）；clangd 自己的参数优先写在工程根的 `.clangd` 里 |
 
 ## keybindings.el（个人快捷键）
 
@@ -365,7 +367,7 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | Emacs ≥ 29 | 依赖默认包激活；优先 `modus-operandi-tinted` |
 | Emacs 28.1+ | `read-extended-command-predicate`、`repeat-mode`、`core/suppress.el` 整体生效 |
 | Emacs 26.1+ | `global-display-line-numbers-mode` |
-| Emacs 29.1+ | `pixel-scroll-precision-mode` |
+| Emacs 29.1+ | `pixel-scroll-precision-mode`；**Eglot 内置**（`use-eglot.el` 用它做 LSP，不再装 lsp-mode） |
 
 版本判断使用 `version<=` / `emacs-major-version`，低版本自动跳过对应功能，不会报错。
 
@@ -377,6 +379,9 @@ magit 的日常用法（暂存、提交、rebase、log 等）见 [magit.md](magi
 | `C-x C-b` | `ibuffer` 缓冲区列表 |
 | `C-x g` / `C-x M-g` | magit-status / magit-dispatch |
 | `C-c d` | dape 调试前缀键（见上文） |
+| `C-c L` | Eglot 操作前缀（改名/code action/格式化/跳转，见 [eglot.md](eglot.md)） |
+| `C-c l` | Eglot 查看前缀（符号/诊断/inlay hints/头文件切换，见 [eglot.md](eglot.md)） |
+| `M-9` | 工程级诊断列表（flymake） |
 | `C-x u`（可连按 `u`） | 撤销（repeat-mode） |
 | `C-c <left>` / `C-c <right>` | 撤销 / 重做窗口布局 |
 | `Shift + ↑↓←→` | 切换窗口焦点 |

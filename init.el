@@ -31,7 +31,7 @@
 ;; 模块加载列表
 (defvar my/local-modules
   '(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete
-    use-multi-edit use-vertico use-yasnippet use-corfu use-lspmode use-clangd))
+    use-multi-edit use-vertico use-yasnippet use-corfu use-eglot use-clangd))
 
 (dolist (module my/local-modules)
   (require module nil 'noerror))
