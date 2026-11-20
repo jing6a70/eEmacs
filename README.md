@@ -1,64 +1,126 @@
-# 概述
+<img src="./apex.jpg" title="" alt="" width="724">
 
-这是一套精简, 功能基础, 可扩展的emacs配置文件, 可以基本作为C/C++开发主战编辑器.
+# 🚀 Emacs Custom CFG: 定制C/C++ 开发环境
 
-2019年初, 我脱离win系统, 来到Linux的世界, 当时我只知道Linux是一个开源的, 我自己也是一个开源积极分子。
+## [English](./README_EN.md) / [中文](./README.md)
 
-初到Linux, 当时开发编辑器选择一共有两个，后来我选择了emacs. 时间证明我选择Emacs编辑器是正确的. 
+这是一个个人定制化的 Emacs 配置仓库，旨在将 Emacs 打造成**开箱即用、高效流畅的全能编程环境**，尤其针对 C/C++ 开发进行了深度优化，兼顾易用性与强大功能，让你摆脱繁琐配置，专注于代码本身。
 
+## ✨ 核心特性
 
+### 🧠 智能代码补全与导航（LSP 集成）
 
-# 基本功能一览
+- 集成 **Language Server Protocol (LSP)**，提供工业级别的代码智能支持
+- 支持**模糊匹配代码补全**，快速筛选所需候选，大幅提升编码效率
+- 完整支持**跳转定义、查找引用、重命名、代码诊断**等核心功能，媲美主流 IDE
 
-## 1. 简洁的配置文件， 可定制性强
+### 🔧 一站式 C/C++ IDE 解决方案
 
-![simpleconfig](image/simpleconfig.png)
+- 自定义优化 C/C++ 开发流程，具备**完整项目管理、高效代码导航**能力
+- 内置**调试支持**，无缝对接调试工具，快速定位代码问题
+- 针对 C/C++ 语法高亮、缩进、格式化进行专项优化，符合工业编码规范
 
+### 🚀 内置多语言代码片段（YASnippet）
 
+- 集成 YASnippet，预置多种主流编程语言的常用代码模板
+- 一键插入代码块（循环、条件判断、函数定义、注释模板等），减少重复编码
+- 支持自定义扩展代码片段，适配个人编码习惯与项目需求
 
-## 2. 默认启动了支持C/C++头文件的补全
+### 📦 开箱即用，安装简便
 
-![header_company](image/headercompany.png)
+- 无需复杂的环境配置，克隆后直接运行 Emacs 即可使用
+- 兼容 Emacs 29+ 原生 `use-package`，低版本提供简易补装方案
 
+## 🛠 快速安装
 
+### 1. 克隆配置仓库
 
-## 3. 输入单字，既能够触发C/C++代码补全
+直接将仓库克隆到 `~/.emacs.d` 目录（覆盖原有配置，请提前备份重要数据）：
 
-![code_company](image/codecompany.png)
+```bash
+git clone https://github.com/jing6a70/emacs.git ~/.emacs.d
+```
 
+### 2. 运行 Emacs
 
+```bash
+emacs
+```
 
-## 4. company-mode 候选人默认移动方式: 
+### 3. 低版本 Emacs 兼容处理（< 29）
 
-- <kbd>control</kbd> + <kbd>n</kbd> 下一个
-- <kbd>control</kbd> + <kbd>p</kbd> 上一个
+**Emacs 版本 29 / 29+ 请忽略此步骤** Emacs 29 已自带 `use-package` 核心依赖，若使用 29 以下版本，启动 Emacs 后需手动安装 ：
 
-## 4. 可以自定义修改适合自己的配置
+```bash
+package-install use-package
+```
 
-- 在配置文件下，有custom文件夹. 该文件夹内定义了一些自定义一lisp代码。
-- 其中setup-clanguage.el是定义C/C++所有操作参数, 和按键绑定.
-- ![clang_configure](image/clang.png)
+### 🔌 系统依赖
 
+Emacs 插件在首次启动时会自动安装，但部分功能依赖**系统级工具**，请按需安装（以下为 Arch Linux / Ubuntu 命令对照）。
 
+#### 基础工具
 
-## 修改补全参数  .emacs/custom/setup-clanguage.el
+| 用途 | Arch Linux | Ubuntu | 建议 |
+| --- | --- | --- | --- |
+| 拼写检查（flyspell，`M-$` 修正单词） | `sudo pacman -S aspell aspell-en` | `sudo apt install aspell aspell-en` | 推荐 |
+| 全局搜索（`M-s r` consult-ripgrep） | `sudo pacman -S ripgrep` | `sudo apt install ripgrep` | 推荐 |
+| Git 集成（magit / diff-hl / forge） | `sudo pacman -S git` | `sudo apt install git` | 推荐 |
+| 文件树 Git 状态（treemacs 异步刷新） | `sudo pacman -S python3` | `sudo apt install python3` | 可选 |
+| CMake 项目（`<f6>` 重新生成 compile_commands.json） | `sudo pacman -S cmake` | `sudo apt install cmake` | 可选 |
+| Org LaTeX 公式预览（dvisvgm 渲染） | `sudo pacman -S dvisvgm texlive-basic` | `sudo apt install texlive-extra-utils texlive-latex-base` | 可选 |
+| Node.js（bash-language-server / pyright 的依赖） | `sudo pacman -S nodejs npm` | `sudo apt install nodejs npm` | 按需 |
+| Go 工具链（gopls 的依赖） | `sudo pacman -S go` | `sudo apt install golang-go` | 按需 |
 
-- 补全设置: (setq company-idle-delay 0.08) 
-- 补全触发长度设置: (setq company-minimum-prefix-length 1)
+#### LSP 语言服务器（按使用的语言安装）
 
+```bash
+# C/C++ —— clangd（Arch 包含在 clang 中；Ubuntu 有独立 clangd 包）
+sudo pacman -S clang        # Arch
+sudo apt install clangd     # Ubuntu
 
+# Shell —— bash-language-server（需要 nodejs + npm）
+npm install -g --prefix ~/.local/npm-global bash-language-server
 
-# 功能简述
+# Python —— pyright（需要 nodejs + npm）
+npm install -g --prefix ~/.local/npm-global pyright
 
-### 重要目录文件:
+# Go —— gopls（需要 Go 工具链）
+go install golang.org/x/tools/gopls@latest
+```
 
-- custom    --- 定义了一些自定义的elisp代码, 控制着整个emacs编辑器
-- elpa          --- 该文件夹存放着下载的插件
-- snippets  --- 用于yasnippets插件 代码片段补全, 输入基本字母, 按TAB补全
+> **路径约定**：配置会自动把 `~/.local/npm-global/bin` 与 `~/go/bin` 加入 Emacs 的 `exec-path`（见 `elisp/e-bash-mode.el`、`elisp/e-golang-mode.el`），npm / go 安装到上述默认位置即可被找到，无需手动修改 shell 环境变量。缺少某个服务器时，打开对应语言的文件只会弹出一条警告，不影响其他语言。
 
+#### 字体（图标显示）
 
+treemacs 文件树图标与 doom-modeline 图标需要安装任意一款 **Nerd Font**：
 
-# 附加小功能
+```bash
+# Arch（AUR）
+yay -S nerd-fonts-fira-code
 
-<kbd>F2</kbd>  打开 **.emacs/init.el** 配置文件
+# 手动安装：从 https://github.com/ryanoasis/nerd-fonts/releases 下载，
+# 放入 ~/.local/share/fonts 后执行 fc-cache -fv
+```
 
+默认字体的设置位于 `view/use-fonts.el`（默认为注释状态，按需启用）。
+
+### 📂 工程目录结构
+
+```textile
+~/.emacs.d/
+├── core/        # 核心配置文件（初始化、全局设置等）
+├── moduls/      # 各插件独立配置项（按需加载、个性化配置）
+├── elisp/       # 自定义处理函数（扩展 Emacs 原生功能）
+└── snippets/    # 代码片段仓库（YASnippet 模板，支持多语言）
+```
+
+## 📝 补充说明
+
+1. 首次启动 Emacs 时，会自动下载并安装所需插件，需保证网络通畅
+2. 若需修改 C/C++ 相关配置，可查看 `moduls/` 目录下对应的 LSP 配置文件
+3. 自定义代码片段可直接放入 `snippets/` 对应语言目录，重启 Emacs 即可生效
+
+### ⭐ 如果这个配置对你有帮助，欢迎给仓库点个 Star 支持一下！
+
+### ⭐⭐⭐谢谢⭐⭐⭐

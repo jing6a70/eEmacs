@@ -1,78 +1,60 @@
-(require 'package)
+;;; -*- lexical-binding: t; -*-
+;; init.el
+;; ┌─┐┌─┐┬─┐┌─┐┌─┐  ┌─┐┬ ┬┌─┐┬  ┌─┐┌─┐
+;; ├─┘├┤ ├┬┘├┤ ├┤   ├─┤│ │├─┤│  ├┤ └─┐
+;; ┴  └─┘┴└─└  └─┘  ┴ ┴└─┘┴ ┴┴─┘└─┘└─┘
+;;       A P E X     E M A C S
+;;
+;; Commentary: Initial load file for Emacs. Loads on every Emacs start.
 
-(setq package-archives '(("gnu" . "http://elpa.emacs-china.org/gnu/")
-			 ("melpa" . "http://elpa.emacs-china.org/melpa/")))
+;; Set key variable { user-emacs-directory } => ~/.emacs.d/
+(if (boundp 'load-file-name)
+    (setq user-emacs-directory (file-name-as-directory (file-name-directory load-file-name)))
+  (setq user-emacs-directory (file-name-as-directory "~/.emacs.d/")))
 
-(package-initialize)
+;; Set { core-dir } and { view-dir } folder paths
+(defvar core-dir (expand-file-name "core" user-emacs-directory))
+(defvar view-dir (expand-file-name "view" user-emacs-directory))
 
-(setq-default ispell-program-name "aspell")
-;; (setq ispell-personal-dictionary "/usr/lib/ispell/english.hash")
-(require 'ispell)
+;; Load base editor setup
+(load (expand-file-name "use-common-emacs.el" core-dir) t t)
 
-(add-to-list 'load-path "~/.emacs.d/custom/")
-(setq use-package-always-ensure t)
-
-;; =========================================
-;; Emacs UI
-;; =========================================
-(require 'setup-general)
-(require 'setup-ivy)
-
-
-;; =========================================
-;; Customized lisp Functions and key bind
-;; =========================================
-
-(require 'init-fun)
-
-(require 'insert-translated-name)
-(require 'company-english-helper)
-(require 'setup-youdao-dictionary)
-
-(global-set-key (kbd "C-c f") 'insert-translated-name-insert-original-translation)
-
-(global-set-key (kbd "C-c e") 'toggle-company-english-helper)
+;; Load package sources (see with C-h v package-archives)
+(load (expand-file-name "package-sources.el" core-dir) t t)
+(package-initialize) ;; start the package manager
+;; Load custom-config
+(load (expand-file-name "custom-config.el" core-dir) t t)
+;; Load font setup (icon font for treemacs / doom-modeline)
+(load (expand-file-name "use-fonts.el" view-dir) t t)
+;; Load theme
+(load (expand-file-name "use-theme.el" view-dir) t t)
 
 
+;; Load each USE config
+(add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
+(defvar my/local-modules
+  '(use-vertico        ;; completion UI framework
+    ;; use-corfu       ;; buffer completion (Corfu, instead of company) — off for now
+    use-lspmode        ;; LSP core setup (generic, no language inside)
+    use-treemacs       ;; left side file tree
+    use-magit          ;; git client
+    use-orgmode        ;; org file support
+    use-yasnippet      ;; code snippets
+    use-hungry-delete  ;; remove extra spaces fast
+    use-undo-tree      ;; C-x u visual undo tree
+    use-which-key      ;; key hint popup
+    use-spell          ;; traditional flyspell spell check (aspell/hunspell)
+    use-multi-edit     ;; multi-line editing: multiple-cursors + iedit + expand-region
+    ))
+(dolist (module my/local-modules)
+  (require module nil 'noerror))
 
-;; =========================================
-;; Packages Installation
-;; =========================================
-(require 'setup-editing)
-(require 'setup-yasnippet)
-(require 'setup-ggtags)
-(require 'setup-cedet)
-(require 'setup-orgmode)
-
-;; C language
-(require 'setup-clanguage)
-(require 'setup-hungry-delete)
-
-;; Javascript
-(require 'setup-js2mode)
-
-
-
-;; =========================================
-;; Emacs Lisp test code
-;; =========================================
-
-
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("fa2b58bb98b62c3b8cf3b6f02f058ef7827a8e497125de0254f56e373abee088" default)))
- '(package-selected-packages
-   (quote
-    (youdao-dictionary js2-mode hungry-delete anzu ws-butler dtrt-indent clean-aindent-mode undo-tree volatile-highlights ggtags zygospore projectile yasnippet spacemacs-theme use-package))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; Custom functions and key bindings
+(add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
+(require 'init-func-def)
+(require 'init-func-key)
+;; Language files (custom elisp, LSP based; need use-lspmode above)
+(require 'e-clang-mode)
+(require 'e-bash-mode)          ;; shell scripts via bash-language-server
+(require 'e-golang-mode)        ;; go via gopls
+(require 'e-pylang-mode)        ;; python via pyright
