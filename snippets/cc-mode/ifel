@@ -1,6 +1,0 @@
-# key: ifel
-# name: if else (...) { ... }
-# --
-if else(${1:condition}) {
-$0$>
-}$>

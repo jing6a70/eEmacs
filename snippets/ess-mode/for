@@ -1,6 +1,0 @@
-# key: for
-# name: for (...) { ... }
-# --
-for (${1:condition}) {
-$0$>
-}$>

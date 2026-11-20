@@ -1,60 +1,55 @@
-;;; -*- lexical-binding: t; -*-
-;; init.el
+;;; init.el --- 启动入口 -*- lexical-binding: t; -*-
+;; /init.el
+;;
 ;; ┌─┐┌─┐┬─┐┌─┐┌─┐  ┌─┐┬ ┬┌─┐┬  ┌─┐┌─┐
 ;; ├─┘├┤ ├┬┘├┤ ├┤   ├─┤│ │├─┤│  ├┤ └─┐
 ;; ┴  └─┘┴└─└  └─┘  ┴ ┴└─┘┴ ┴┴─┘└─┘└─┘
-;;       A P E X     E M A C S
-;;
-;; Commentary: Initial load file for Emacs. Loads on every Emacs start.
+;;         A P E X   E M A C S
 
-;; Set key variable { user-emacs-directory } => ~/.emacs.d/
-(if (boundp 'load-file-name)
-    (setq user-emacs-directory (file-name-as-directory (file-name-directory load-file-name)))
-  (setq user-emacs-directory (file-name-as-directory "~/.emacs.d/")))
+;;; Code:
 
-;; Set { core-dir } and { view-dir } folder paths
-(defvar core-dir (expand-file-name "core" user-emacs-directory))
-(defvar view-dir (expand-file-name "view" user-emacs-directory))
+;; 设置user-emacs-directory
+(setq user-emacs-directory
+      (file-name-as-directory
+       (file-truename (file-name-directory (or load-file-name buffer-file-name)))))
 
-;; Load base editor setup
-(load (expand-file-name "use-common-emacs.el" core-dir) t t)
+;; 将 M-x customize 的写入定向到独立文件 
+(setq custom-file (expand-file-name ".config-auto.el" user-emacs-directory))
+(load custom-file 'noerror) ;; 存在则加载, 不存在静默忽略
 
-;; Load package sources (see with C-h v package-archives)
-(load (expand-file-name "package-sources.el" core-dir) t t)
-(package-initialize) ;; start the package manager
-;; Load custom-config
-(load (expand-file-name "custom-config.el" core-dir) t t)
-;; Load font setup (icon font for treemacs / doom-modeline)
-(load (expand-file-name "use-fonts.el" view-dir) t t)
-;; Load theme
-(load (expand-file-name "use-theme.el" view-dir) t t)
+;; 注册core子目录
+(defconst core-dir (expand-file-name "core" user-emacs-directory))
 
+;; 加载core子目录配置
+(mapc (lambda (module)
+        (load (expand-file-name module core-dir) nil t))
+      '("elpa" "view" "edit" "theme" "suppress" "compat"))
 
-;; Load each USE config
+;; 注册modules子目录
 (add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
+
+;; 模块加载列表
 (defvar my/local-modules
-  '(use-vertico        ;; completion UI framework
-    ;; use-corfu       ;; buffer completion (Corfu, instead of company) — off for now
-    use-lspmode        ;; LSP core setup (generic, no language inside)
-    use-treemacs       ;; left side file tree
-    use-magit          ;; git client
-    use-orgmode        ;; org file support
-    use-yasnippet      ;; code snippets
-    use-hungry-delete  ;; remove extra spaces fast
-    use-undo-tree      ;; C-x u visual undo tree
-    use-which-key      ;; key hint popup
-    use-spell          ;; traditional flyspell spell check (aspell/hunspell)
-    use-multi-edit     ;; multi-line editing: multiple-cursors + iedit + expand-region
-    ))
+  '(use-magit use-dape use-dashboard use-treemacs use-undo-tree use-hungry-delete
+    use-multi-edit use-vertico use-yasnippet use-corfu use-eglot use-clangd))
+
 (dolist (module my/local-modules)
   (require module nil 'noerror))
 
-;; Custom functions and key bindings
-(add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
-(require 'init-func-def)
-(require 'init-func-key)
-;; Language files (custom elisp, LSP based; need use-lspmode above)
-(require 'e-clang-mode)
-(require 'e-bash-mode)          ;; shell scripts via bash-language-server
-(require 'e-golang-mode)        ;; go via gopls
-(require 'e-pylang-mode)        ;; python via pyright
+
+;; 加载按键绑定配置
+(load (expand-file-name "keybindings.el" user-emacs-directory) nil t)
+
+;; 启动emacs server => 如果发现systemd已启动则跳过
+(require 'server)
+(unless (or noninteractive
+            (daemonp)
+            (server-running-p))
+  (server-start))
+
+;; 设置GC阀值=16M
+(add-hook 'emacs-startup-hook
+          (lambda () (setq gc-cons-threshold (* 16 1024 1024))))
+
+(provide 'init)
+;;; init.el ends here

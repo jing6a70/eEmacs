@@ -1,36 +1,32 @@
-# 依赖包（package-install / use-package 可重装）
-elpa/
-eln-cache/
-
-# Emacs 运行时缓存 / 会话 / 历史
-auto-save-list/
-.cache/
-transient/
-url/
-semanticdb/
-tramp/
+.config-auto.el
+places
+places.eld
+projects
+projects.eld
 history
 recentf
 recentf.eld
-session.*
-*.session
-.lsp-session-v1
-.config-auto.el
-forge-database.sqlite
-projectile-bookmarks.eld
-projectile-frecency.eld
-ede-projects.el
-
-# AI 助手本地目录
-.deepseek/
-.codewhale/
-
-# 编译产物与临时文件
+auto-save-list/
 *.elc
+
 *~
 \#*\#
 .\#*
 /.emacs.desktop
 /.emacs.desktop.lock
+
+/eshell/history
+/eshell/lastdir
+
+tramp
+
 flycheck_*.el
 *_flymake.*
+
+elpa/
+eln-cache/
+
+forge-database.sqlite*
+transient/
+
+.cache/

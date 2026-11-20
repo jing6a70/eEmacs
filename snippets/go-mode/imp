@@ -1,6 +1,0 @@
-# name: empty import
-# key: imp
-# --
-import (
-  "$0"$>
-)$>
