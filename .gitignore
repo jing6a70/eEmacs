@@ -1,0 +1,21 @@
+# 依赖包目录（可用 package-install / use-package 重新安装）
+elpa/
+eln-cache/
+
+# Emacs 运行时缓存 / 会话文件
+semanticdb/
+auto-save-list/
+ede-projects.el
+projectile-bookmarks.eld
+.cache/
+tramp/
+flycheck_*.el
+*_flymake.*
+
+# 编译产物与临时文件
+*.elc
+*~
+\#*\#
+.\#*
+/.emacs.desktop
+/.emacs.desktop.lock
